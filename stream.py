@@ -8,7 +8,7 @@ st.caption("左上角双箭头填写目前积分和材料数量")
 
 # --- 版本选择 ---
 st.markdown("---")
-version = st.radio("选择版本:", ["详细版 (逐项设置)", "简略版 (兵种批量设置)"], horizontal=True)
+version = st.radio("选择版本:", ["详细版 (逐项设置)", "简略版 (批量设置)"], horizontal=True)
 
 st.markdown("---")
 
