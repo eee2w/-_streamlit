@@ -7,15 +7,13 @@ st.title("⚔️💎 神兵玉石自动升级计算器")
 st.caption("📝 提示：点击左上角双箭头图标填写积分和材料数量")
 st.markdown("---")
 
-# --- 版本说明 ---
-st.info("""
-**功能说明**：
-1. 填写当前积分和材料库存
-2. 设置当前步/弓神兵玉石等级
-3. 设置等级差（默认：神兵高5级，玉石高3级）
-4. 系统自动计算在当前资源下，步兵和弓兵能升到的最高等级
-5. 忽略骑兵的神兵和玉石
-""")
+# --- 版本选择 ---
+version = st.radio("选择版本:", ["详细版 (分别设置)", "简略版 (仅设置步兵)"], horizontal=True)
+
+if version == "详细版 (分别设置)":
+    st.info("详细版：可分别设置步兵和弓兵的所有当前等级")
+else:
+    st.info("简略版：只需设置步兵等级，弓兵等级自动按等级差计算")
 
 st.markdown("---")
 
@@ -51,30 +49,97 @@ with st.sidebar:
 
 st.markdown("---")
 
-# --- 2. 当前等级输入 ---
-st.header("🎯 当前等级设置")
-st.caption("设置步兵和弓兵神兵、玉石的当前等级")
+# --- 2. 当前等级输入（根据版本显示不同界面）---
+if version == "详细版 (分别设置)":
+    st.header("🎯 当前等级设置 - 详细版")
+    st.caption("分别设置步兵和弓兵神兵、玉石的当前等级")
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.subheader("步兵神兵")
+        weapon_level_options = ["未拥有"] + [f"绿色{i}级" for i in range(1, 6)] + [f"蓝色{i}级" for i in range(1, 6)] + [f"紫色{i}级" for i in range(1, 11)] + [f"红色{i}级" for i in range(1, 31)]
+        current_foot_weapon = st.selectbox("当前等级", options=weapon_level_options, index=weapon_level_options.index("绿色1级"), key="curr_foot_weapon_detail")
+    
+    with col2:
+        st.subheader("弓兵神兵")
+        current_archer_weapon = st.selectbox("当前等级", options=weapon_level_options, index=weapon_level_options.index("未拥有"), key="curr_archer_weapon_detail")
+    
+    with col3:
+        st.subheader("步兵玉石")
+        jade_level_options = list(range(0, 26))
+        current_foot_jade = st.selectbox("当前等级", options=jade_level_options, index=0, key="curr_foot_jade_detail")
+    
+    with col4:
+        st.subheader("弓兵玉石")
+        current_archer_jade = st.selectbox("当前等级", options=jade_level_options, index=0, key="curr_archer_jade_detail")
+    
+    # 计算弓兵等级差（仅显示，不用于计算）
+    foot_weapon_num = 0 if current_foot_weapon == "未拥有" else \
+                     (int(current_foot_weapon.replace("绿色", "").replace("级", "")) if "绿色" in current_foot_weapon else \
+                     (int(current_foot_weapon.replace("蓝色", "").replace("级", "")) + 5 if "蓝色" in current_foot_weapon else \
+                     (int(current_foot_weapon.replace("紫色", "").replace("级", "")) + 10 if "紫色" in current_foot_weapon else \
+                     (int(current_foot_weapon.replace("红色", "").replace("级", "")) + 20))))
+    
+    archer_weapon_num = 0 if current_archer_weapon == "未拥有" else \
+                       (int(current_archer_weapon.replace("绿色", "").replace("级", "")) if "绿色" in current_archer_weapon else \
+                       (int(current_archer_weapon.replace("蓝色", "").replace("级", "")) + 5 if "蓝色" in current_archer_weapon else \
+                       (int(current_archer_weapon.replace("紫色", "").replace("级", "")) + 10 if "紫色" in current_archer_weapon else \
+                       (int(current_archer_weapon.replace("红色", "").replace("级", "")) + 20))))
+    
+    actual_weapon_diff = foot_weapon_num - archer_weapon_num
+    actual_jade_diff = current_foot_jade - current_archer_jade
+    
+    st.info(f"当前等级差：神兵差 {actual_weapon_diff} 级，玉石差 {actual_jade_diff} 级")
 
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-    st.subheader("步兵神兵")
-    # 定义等级选项
-    weapon_level_options = ["未拥有"] + [f"绿色{i}级" for i in range(1, 6)] + [f"蓝色{i}级" for i in range(1, 6)] + [f"紫色{i}级" for i in range(1, 11)] + [f"红色{i}级" for i in range(1, 31)]
-    current_foot_weapon = st.selectbox("当前等级", options=weapon_level_options, index=weapon_level_options.index("绿色1级"), key="curr_foot_weapon")
-
-with col2:
-    st.subheader("弓兵神兵")
-    current_archer_weapon = st.selectbox("当前等级", options=weapon_level_options, index=weapon_level_options.index("未拥有"), key="curr_archer_weapon")
-
-with col3:
-    st.subheader("步兵玉石")
-    jade_level_options = list(range(0, 26))
-    current_foot_jade = st.selectbox("当前等级", options=jade_level_options, index=0, key="curr_foot_jade")
-
-with col4:
-    st.subheader("弓兵玉石")
-    current_archer_jade = st.selectbox("当前等级", options=jade_level_options, index=0, key="curr_archer_jade")
+else:
+    st.header("🎯 当前等级设置 - 简略版")
+    st.caption("只需设置步兵等级，弓兵等级将根据等级差自动计算")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("步兵神兵")
+        weapon_level_options = ["未拥有"] + [f"绿色{i}级" for i in range(1, 6)] + [f"蓝色{i}级" for i in range(1, 6)] + [f"紫色{i}级" for i in range(1, 11)] + [f"红色{i}级" for i in range(1, 31)]
+        current_foot_weapon = st.selectbox("当前等级", options=weapon_level_options, index=weapon_level_options.index("绿色1级"), key="curr_foot_weapon_simple")
+        
+        # 自动计算弓兵神兵等级
+        foot_weapon_num = 0 if current_foot_weapon == "未拥有" else \
+                         (int(current_foot_weapon.replace("绿色", "").replace("级", "")) if "绿色" in current_foot_weapon else \
+                         (int(current_foot_weapon.replace("蓝色", "").replace("级", "")) + 5 if "蓝色" in current_foot_weapon else \
+                         (int(current_foot_weapon.replace("紫色", "").replace("级", "")) + 10 if "紫色" in current_foot_weapon else \
+                         (int(current_foot_weapon.replace("红色", "").replace("级", "")) + 20))))
+        
+        archer_weapon_num = max(0, foot_weapon_num - WEAPON_LEVEL_DIFF)
+        
+        # 将数字等级转换为字符串
+        def weapon_number_to_str(num):
+            if num == 0:
+                return "未拥有"
+            elif 1 <= num <= 5:
+                return f"绿色{num}级"
+            elif 6 <= num <= 10:
+                return f"蓝色{num-5}级"
+            elif 11 <= num <= 20:
+                return f"紫色{num-10}级"
+            elif 21 <= num <= 50:
+                return f"红色{num-20}级"
+            else:
+                return "未知等级"
+        
+        current_archer_weapon = weapon_number_to_str(archer_weapon_num)
+        st.metric("弓兵神兵 (自动计算)", current_archer_weapon)
+    
+    with col2:
+        st.subheader("步兵玉石")
+        jade_level_options = list(range(0, 26))
+        current_foot_jade = st.selectbox("当前等级", options=jade_level_options, index=0, key="curr_foot_jade_simple")
+        
+        # 自动计算弓兵玉石等级
+        current_archer_jade = max(0, current_foot_jade - JADE_LEVEL_DIFF)
+        st.metric("弓兵玉石 (自动计算)", f"{current_archer_jade}级")
+    
+    st.success(f"根据等级差设置：神兵差 {WEAPON_LEVEL_DIFF} 级，玉石差 {JADE_LEVEL_DIFF} 级")
 
 st.markdown("---")
 
@@ -101,7 +166,7 @@ JADE_UPGRADE_COSTS = [
 ]
 
 class AutoUpgradeCalculator:
-    def __init__(self):
+    def __init__(self, version_type):
         # 当前资源
         self.current_points = CURRENT_POINTS
         self.current_wood = CURRENT_WOOD
@@ -126,6 +191,9 @@ class AutoUpgradeCalculator:
         # 等级差
         self.weapon_level_diff = WEAPON_LEVEL_DIFF
         self.jade_level_diff = JADE_LEVEL_DIFF
+        
+        # 版本类型
+        self.version_type = version_type
         
         # 消耗表
         self.weapon_upgrade_costs = WEAPON_UPGRADE_COSTS
@@ -240,7 +308,8 @@ class AutoUpgradeCalculator:
             "points_needed": 0,
             "materials_to_buy": {},
             "materials_used": {},
-            "points_left": self.current_points
+            "points_left": self.current_points,
+            "upgraded": False
         }
         
         # 遍历可能的步兵神兵等级（从当前等级到50级）
@@ -317,7 +386,8 @@ class AutoUpgradeCalculator:
                             "materials_to_buy": materials_to_buy,
                             "materials_used": materials_used,
                             "materials_needed": total_materials_needed,
-                            "points_left": points_left
+                            "points_left": points_left,
+                            "upgraded": True
                         }
                 else:
                     # 如果积分不够，停止增加步兵玉石等级
@@ -337,147 +407,163 @@ st.header("🚀 自动升级计算")
 
 if st.button("开始自动计算最佳升级方案", type="primary", use_container_width=True):
     with st.spinner("正在计算最佳升级方案..."):
-        calculator = AutoUpgradeCalculator()
+        calculator = AutoUpgradeCalculator(version)
         result = calculator.find_max_levels()
     
-    st.success("计算完成！")
-    
-    # 显示结果总览
-    st.subheader("🎯 最佳升级方案")
-    
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.metric("步兵神兵", 
-                 f"{calculator.level_number_to_str(result['foot_weapon_target'])}",
-                 f"升级{result['foot_weapon_target'] - calculator.level_str_to_number(current_foot_weapon)}级")
-    
-    with col2:
-        st.metric("弓兵神兵", 
-                 f"{calculator.level_number_to_str(result['archer_weapon_target'])}",
-                 f"升级{result['archer_weapon_target'] - calculator.level_str_to_number(current_archer_weapon)}级")
-    
-    with col3:
-        st.metric("步兵玉石", 
-                 f"{result['foot_jade_target']}级",
-                 f"升级{result['foot_jade_target'] - current_foot_jade}级")
-    
-    with col4:
-        st.metric("弓兵玉石", 
-                 f"{result['archer_jade_target']}级",
-                 f"升级{result['archer_jade_target'] - current_archer_jade}级")
+    if not result["upgraded"]:
+        st.warning("当前积分和材料无法进行任何升级！请检查您的资源或降低等级差设置。")
+    else:
+        st.success("计算完成！")
+        
+        # 显示结果总览
+        st.subheader("🎯 最佳升级方案")
+        
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("步兵神兵", 
+                     f"{calculator.level_number_to_str(result['foot_weapon_target'])}",
+                     f"升级{result['foot_weapon_target'] - calculator.level_str_to_number(current_foot_weapon)}级")
+        
+        with col2:
+            st.metric("弓兵神兵", 
+                     f"{calculator.level_number_to_str(result['archer_weapon_target'])}",
+                     f"升级{result['archer_weapon_target'] - calculator.level_str_to_number(current_archer_weapon)}级")
+        
+        with col3:
+            st.metric("步兵玉石", 
+                     f"{result['foot_jade_target']}级",
+                     f"升级{result['foot_jade_target'] - current_foot_jade}级")
+        
+        with col4:
+            st.metric("弓兵玉石", 
+                     f"{result['archer_jade_target']}级",
+                     f"升级{result['archer_jade_target'] - current_archer_jade}级")
+        
+        st.markdown("---")
+        
+        # 积分使用情况
+        st.subheader("💰 积分使用情况")
+        
+        points_col1, points_col2, points_col3 = st.columns(3)
+        
+        with points_col1:
+            st.metric("当前积分", f"{CURRENT_POINTS}")
+        
+        with points_col2:
+            st.metric("升级所需积分", f"{result['points_needed']:.1f}")
+        
+        with points_col3:
+            st.metric("升级后剩余积分", f"{result['points_left']:.1f}")
+        
+        # 材料使用情况
+        st.subheader("📦 材料使用情况")
+        
+        with st.expander("详细材料消耗", expanded=True):
+            tab1, tab2 = st.tabs(["神兵材料", "玉石材料"])
+            
+            with tab1:
+                mat1, mat2, mat3 = st.columns(3)
+                with mat1:
+                    st.metric("木头", 
+                             f"需要: {result['materials_needed'].get('wood', 0)}",
+                             f"使用库存: {result['materials_used'].get('wood', 0)}")
+                with mat2:
+                    st.metric("精金", 
+                             f"需要: {result['materials_needed'].get('mithril', 0)}",
+                             f"使用库存: {result['materials_used'].get('mithril', 0)}")
+                with mat3:
+                    st.metric("青金石", 
+                             f"需要: {result['materials_needed'].get('lapis', 0)}",
+                             f"使用库存: {result['materials_used'].get('lapis', 0)}")
+            
+            with tab2:
+                mat4, mat5 = st.columns(2)
+                with mat4:
+                    st.metric("琢玉刀", 
+                             f"需要: {result['materials_needed'].get('knife', 0)}",
+                             f"使用库存: {result['materials_used'].get('knife', 0)}")
+                with mat5:
+                    st.metric("璞玉", 
+                             f"需要: {result['materials_needed'].get('jade', 0)}",
+                             f"使用库存: {result['materials_used'].get('jade', 0)}")
+        
+        # 需要兑换的材料
+        if any([result['materials_to_buy'].get('wood_need_buy', 0) > 0,
+                result['materials_to_buy'].get('mithril_need_buy', 0) > 0,
+                result['materials_to_buy'].get('lapis_need_buy', 0) > 0,
+                result['materials_to_buy'].get('knife_need_buy', 0) > 0,
+                result['materials_to_buy'].get('jade_need_buy', 0) > 0]):
+            
+            st.subheader("🛒 需要兑换的材料")
+            
+            buy_cols = st.columns(5)
+            buy_materials = [
+                ("木头", result['materials_to_buy'].get('wood_need_buy', 0), "🪵"),
+                ("精金", result['materials_to_buy'].get('mithril_need_buy', 0), "⚙️"),
+                ("青金石", result['materials_to_buy'].get('lapis_need_buy', 0), "🔷"),
+                ("琢玉刀", result['materials_to_buy'].get('knife_need_buy', 0), "🔪"),
+                ("璞玉", result['materials_to_buy'].get('jade_need_buy', 0), "💎")
+            ]
+            
+            for idx, (name, amount, icon) in enumerate(buy_materials):
+                if amount > 0:
+                    buy_cols[idx].metric(f"{icon} {name}", f"{amount}个")
+        
+        # 升级详情
+        st.subheader("📋 升级详情")
+        
+        with st.expander("查看升级路径", expanded=False):
+            # 神兵升级详情
+            st.write("**神兵升级详情:**")
+            weapon_data = {
+                "兵种": ["步兵", "弓兵"],
+                "当前等级": [current_foot_weapon, current_archer_weapon],
+                "目标等级": [
+                    calculator.level_number_to_str(result['foot_weapon_target']),
+                    calculator.level_number_to_str(result['archer_weapon_target'])
+                ],
+                "升级级数": [
+                    result['foot_weapon_target'] - calculator.level_str_to_number(current_foot_weapon),
+                    result['archer_weapon_target'] - calculator.level_str_to_number(current_archer_weapon)
+                ]
+            }
+            st.dataframe(pd.DataFrame(weapon_data), use_container_width=True)
+            
+            # 玉石升级详情
+            st.write("**玉石升级详情:**")
+            jade_data = {
+                "兵种": ["步兵", "弓兵"],
+                "当前等级": [current_foot_jade, current_archer_jade],
+                "目标等级": [result['foot_jade_target'], result['archer_jade_target']],
+                "升级级数": [
+                    result['foot_jade_target'] - current_foot_jade,
+                    result['archer_jade_target'] - current_archer_jade
+                ]
+            }
+            st.dataframe(pd.DataFrame(jade_data), use_container_width=True)
     
     st.markdown("---")
     
-    # 积分使用情况
-    st.subheader("💰 积分使用情况")
-    
-    points_col1, points_col2, points_col3 = st.columns(3)
-    
-    with points_col1:
-        st.metric("当前积分", f"{CURRENT_POINTS}")
-    
-    with points_col2:
-        st.metric("升级所需积分", f"{result['points_needed']:.1f}")
-    
-    with points_col3:
-        st.metric("升级后剩余积分", f"{result['points_left']:.1f}")
-    
-    # 材料使用情况
-    st.subheader("📦 材料使用情况")
-    
-    with st.expander("详细材料消耗", expanded=True):
-        tab1, tab2 = st.tabs(["神兵材料", "玉石材料"])
-        
-        with tab1:
-            mat1, mat2, mat3 = st.columns(3)
-            with mat1:
-                st.metric("木头", 
-                         f"需要: {result['materials_needed'].get('wood', 0)}",
-                         f"使用库存: {result['materials_used'].get('wood', 0)}")
-            with mat2:
-                st.metric("精金", 
-                         f"需要: {result['materials_needed'].get('mithril', 0)}",
-                         f"使用库存: {result['materials_used'].get('mithril', 0)}")
-            with mat3:
-                st.metric("青金石", 
-                         f"需要: {result['materials_needed'].get('lapis', 0)}",
-                         f"使用库存: {result['materials_used'].get('lapis', 0)}")
-        
-        with tab2:
-            mat4, mat5 = st.columns(2)
-            with mat4:
-                st.metric("琢玉刀", 
-                         f"需要: {result['materials_needed'].get('knife', 0)}",
-                         f"使用库存: {result['materials_used'].get('knife', 0)}")
-            with mat5:
-                st.metric("璞玉", 
-                         f"需要: {result['materials_needed'].get('jade', 0)}",
-                         f"使用库存: {result['materials_used'].get('jade', 0)}")
-    
-    # 需要兑换的材料
-    if any([result['materials_to_buy'].get('wood_need_buy', 0) > 0,
-            result['materials_to_buy'].get('mithril_need_buy', 0) > 0,
-            result['materials_to_buy'].get('lapis_need_buy', 0) > 0,
-            result['materials_to_buy'].get('knife_need_buy', 0) > 0,
-            result['materials_to_buy'].get('jade_need_buy', 0) > 0]):
-        
-        st.subheader("🛒 需要兑换的材料")
-        
-        buy_cols = st.columns(5)
-        buy_materials = [
-            ("木头", result['materials_to_buy'].get('wood_need_buy', 0), "🪵"),
-            ("精金", result['materials_to_buy'].get('mithril_need_buy', 0), "⚙️"),
-            ("青金石", result['materials_to_buy'].get('lapis_need_buy', 0), "🔷"),
-            ("琢玉刀", result['materials_to_buy'].get('knife_need_buy', 0), "🔪"),
-            ("璞玉", result['materials_to_buy'].get('jade_need_buy', 0), "💎")
-        ]
-        
-        for idx, (name, amount, icon) in enumerate(buy_materials):
-            if amount > 0:
-                buy_cols[idx].metric(f"{icon} {name}", f"{amount}个")
-    
-    # 升级详情
-    st.subheader("📋 升级详情")
-    
-    with st.expander("查看升级路径", expanded=False):
-        # 神兵升级详情
-        st.write("**神兵升级详情:**")
-        weapon_data = {
-            "兵种": ["步兵", "弓兵"],
-            "当前等级": [current_foot_weapon, current_archer_weapon],
-            "目标等级": [
-                calculator.level_number_to_str(result['foot_weapon_target']),
-                calculator.level_number_to_str(result['archer_weapon_target'])
-            ],
-            "升级级数": [
-                result['foot_weapon_target'] - calculator.level_str_to_number(current_foot_weapon),
-                result['archer_weapon_target'] - calculator.level_str_to_number(current_archer_weapon)
-            ]
-        }
-        st.dataframe(pd.DataFrame(weapon_data), use_container_width=True)
-        
-        # 玉石升级详情
-        st.write("**玉石升级详情:**")
-        jade_data = {
-            "兵种": ["步兵", "弓兵"],
-            "当前等级": [current_foot_jade, current_archer_jade],
-            "目标等级": [result['foot_jade_target'], result['archer_jade_target']],
-            "升级级数": [
-                result['foot_jade_target'] - current_foot_jade,
-                result['archer_jade_target'] - current_archer_jade
-            ]
-        }
-        st.dataframe(pd.DataFrame(jade_data), use_container_width=True)
-    
-    st.markdown("---")
-    st.info(f"""
-    **计算说明**:
-    1. 保持步兵神兵比弓兵神兵高 **{WEAPON_LEVEL_DIFF}** 级
-    2. 保持步兵玉石比弓兵玉石高 **{JADE_LEVEL_DIFF}** 级
-    3. 系统在满足等级差的前提下，最大化步兵的等级
-    4. 忽略骑兵的神兵和玉石
-    """)
+    # 版本特定说明
+    if version == "详细版 (分别设置)":
+        st.info(f"""
+        **计算说明**:
+        1. 保持步兵神兵比弓兵神兵高 **{WEAPON_LEVEL_DIFF}** 级
+        2. 保持步兵玉石比弓兵玉石高 **{JADE_LEVEL_DIFF}** 级
+        3. 系统在满足等级差的前提下，最大化步兵的等级
+        4. 忽略骑兵的神兵和玉石
+        5. **详细版**: 可以分别设置步兵和弓兵的当前等级
+        """)
+    else:
+        st.info(f"""
+        **计算说明**:
+        1. 保持步兵神兵比弓兵神兵高 **{WEAPON_LEVEL_DIFF}** 级
+        2. 保持步兵玉石比弓兵玉石高 **{JADE_LEVEL_DIFF}** 级
+        3. 系统在满足等级差的前提下，最大化步兵的等级
+        4. 忽略骑兵的神兵和玉石
+        5. **简略版**: 只需设置步兵等级，弓兵等级自动按等级差计算
+        """)
 
 st.markdown("---")
-st.caption("提示：修改侧边栏的设置后，点击上方按钮重新计算。")
+st.caption("提示：修改侧边栏的设置后，点击上方按钮重新计算。切换版本后，当前设置会被重置。")
