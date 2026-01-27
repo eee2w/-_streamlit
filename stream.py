@@ -2,8 +2,13 @@ import streamlit as st
 import pandas as pd
 
 # ============= Streamlit 网页应用 =============
-st.set_page_config(page_title="神兵玉石升级计算器-20260127风采", layout="wide")
+st.set_page_config(page_title="神兵玉石升级计算器", layout="wide")
 st.title("⚔️💎 神兵玉石升级计算器")
+
+# --- 版本选择 ---
+st.markdown("---")
+version = st.radio("选择版本:", ["详细版 (逐项设置)", "简略版 (兵种批量设置)"], horizontal=True)
+
 st.markdown("---")
 
 # --- 1. 用户输入区（放在侧边栏，手机浏览更友好）---
@@ -30,59 +35,150 @@ with st.sidebar:
     POINTS_PER_CARVING_KNIFE = st.number_input("琢玉刀兑换比例 (积分/个)", min_value=0.0, value=30.0, step=0.1, format="%.2f")
     POINTS_PER_UNPOLISHED_JADE = st.number_input("璞玉兑换比例 (积分/个)", min_value=0.0, value=6.0, step=0.1, format="%.2f")
 
-# --- 2. 神兵等级选择（在主页面使用多列布局）---
-st.header("⚔️ 神兵升级目标")
-
-# 定义等级选项
-weapon_level_options = ["未拥有"] + [f"绿色{i}级" for i in range(1, 6)] + [f"蓝色{i}级" for i in range(1, 6)] + [f"紫色{i}级" for i in range(1, 11)] + [f"红色{i}级" for i in range(1, 31)]
-
-# 为6件神兵创建6列
-weapon_cols = st.columns(6)
-weapon_names = ["步兵上", "步兵下", "骑兵上", "骑兵下", "弓兵上", "弓兵下"]
-
+# --- 2. 根据版本选择不同的界面 ---
 WEAPONS = {}
-for idx, weapon_name in enumerate(weapon_names):
-    with weapon_cols[idx]:
-        st.markdown(f"**{weapon_name}**")
-        # 将所有神兵的默认值都设为"未拥有"（索引0）
-        current_default = 0  # "未拥有"的索引
-        target_default = 0   # "未拥有"的索引
-            
-        current_level = st.selectbox("当前等级", options=weapon_level_options, index=current_default, key=f"w_curr_{weapon_name}")
-        target_level = st.selectbox("目标等级", options=weapon_level_options, index=target_default, key=f"w_tar_{weapon_name}")
-        WEAPONS[weapon_name] = {"current": current_level, "target": target_level}
-
-st.markdown("---")
-
-# --- 3. 玉石等级选择（使用折叠器节省空间）---
-st.header("💎 玉石升级目标")
-st.caption("24个玉石，请分别设置当前和目标等级（0级为未激活）")
-
-# 定义玉石等级选项 (0-25级)
-jade_level_options = list(range(0, 26))
-
-# 使用展开/折叠器来组织，避免页面过长
 JADES = {}
-jade_types = ["步兵上", "步兵下", "骑兵上", "骑兵下", "弓兵上", "弓兵下"]
 
-for jade_type in jade_types:
-    with st.expander(f"{jade_type}玉石 (1-4号)", expanded=jade_type=="步兵上"):
-        cols = st.columns(4)
-        for i in range(1, 5):
-            jade_name = f"{jade_type}{i}"
-            with cols[i-1]:
-                st.markdown(f"**{jade_name}**")
-                # 将所有玉石的默认值都设为0（未激活）
-                default_current = 0  # 0级
-                default_target = 0   # 0级
+if version == "详细版 (逐项设置)":
+    # --- 详细版神兵等级选择 ---
+    st.header("⚔️ 神兵升级目标")
+    
+    # 定义等级选项
+    weapon_level_options = ["未拥有"] + [f"绿色{i}级" for i in range(1, 6)] + [f"蓝色{i}级" for i in range(1, 6)] + [f"紫色{i}级" for i in range(1, 11)] + [f"红色{i}级" for i in range(1, 31)]
+    
+    # 为6件神兵创建6列
+    weapon_cols = st.columns(6)
+    weapon_names = ["步兵上", "步兵下", "骑兵上", "骑兵下", "弓兵上", "弓兵下"]
+    
+    for idx, weapon_name in enumerate(weapon_names):
+        with weapon_cols[idx]:
+            st.markdown(f"**{weapon_name}**")
+            # 将所有神兵的默认值都设为"未拥有"（索引0）
+            current_default = 0  # "未拥有"的索引
+            target_default = 0   # "未拥有"的索引
                 
-                current = st.selectbox("当前", options=jade_level_options, index=default_current, key=f"j_curr_{jade_name}")
-                target = st.selectbox("目标", options=jade_level_options, index=default_target, key=f"j_tar_{jade_name}")
-                JADES[jade_name] = {"current": current, "target": target}
+            current_level = st.selectbox("当前等级", options=weapon_level_options, index=current_default, key=f"w_curr_{weapon_name}")
+            target_level = st.selectbox("目标等级", options=weapon_level_options, index=target_default, key=f"w_tar_{weapon_name}")
+            WEAPONS[weapon_name] = {"current": current_level, "target": target_level}
+    
+    st.markdown("---")
+    
+    # --- 详细版玉石等级选择 ---
+    st.header("💎 玉石升级目标")
+    st.caption("24个玉石，请分别设置当前和目标等级（0级为未激活）")
+    
+    # 定义玉石等级选项 (0-25级)
+    jade_level_options = list(range(0, 26))
+    
+    # 使用展开/折叠器来组织，避免页面过长
+    jade_types = ["步兵上", "步兵下", "骑兵上", "骑兵下", "弓兵上", "弓兵下"]
+    
+    for jade_type in jade_types:
+        with st.expander(f"{jade_type}玉石 (1-4号)", expanded=jade_type=="步兵上"):
+            cols = st.columns(4)
+            for i in range(1, 5):
+                jade_name = f"{jade_type}{i}"
+                with cols[i-1]:
+                    st.markdown(f"**{jade_name}**")
+                    # 将所有玉石的默认值都设为0（未激活）
+                    default_current = 0  # 0级
+                    default_target = 0   # 0级
+                    
+                    current = st.selectbox("当前", options=jade_level_options, index=default_current, key=f"j_curr_{jade_name}")
+                    target = st.selectbox("目标", options=jade_level_options, index=default_target, key=f"j_tar_{jade_name}")
+                    JADES[jade_name] = {"current": current, "target": target}
+
+else:
+    # --- 简略版神兵等级选择 ---
+    st.header("⚔️ 神兵升级目标 (批量设置)")
+    st.caption("每个兵种上下两件神兵使用相同等级")
+    
+    # 定义等级选项
+    weapon_level_options = ["未拥有"] + [f"绿色{i}级" for i in range(1, 6)] + [f"蓝色{i}级" for i in range(1, 6)] + [f"紫色{i}级" for i in range(1, 11)] + [f"红色{i}级" for i in range(1, 31)]
+    
+    # 为3个兵种创建3列
+    troop_cols = st.columns(3)
+    troop_names = ["步兵", "骑兵", "弓兵"]
+    
+    troop_settings = {}
+    
+    for idx, troop_name in enumerate(troop_names):
+        with troop_cols[idx]:
+            st.markdown(f"**{troop_name}**")
+            # 默认值设为"未拥有"
+            current_default = 0
+            target_default = 0
+            
+            current_level = st.selectbox(f"{troop_name}当前等级", options=weapon_level_options, index=current_default, key=f"t_curr_{troop_name}")
+            target_level = st.selectbox(f"{troop_name}目标等级", options=weapon_level_options, index=target_default, key=f"t_tar_{troop_name}")
+            troop_settings[troop_name] = {"current": current_level, "target": target_level}
+    
+    # 根据兵种设置生成详细的WEAPONS数据（上下相同）
+    for troop_name, levels in troop_settings.items():
+        WEAPONS[f"{troop_name}上"] = {"current": levels["current"], "target": levels["target"]}
+        WEAPONS[f"{troop_name}下"] = {"current": levels["current"], "target": levels["target"]}
+    
+    st.markdown("---")
+    
+    # --- 简略版玉石等级选择 ---
+    st.header("💎 玉石升级目标 (批量设置)")
+    st.caption("每个兵种使用相同的一套玉石设置，系统会自动计算8个玉石的消耗")
+    
+    # 定义玉石等级选项 (0-25级)
+    jade_level_options = list(range(0, 26))
+    
+    # 为3个兵种创建3列
+    jade_troop_cols = st.columns(3)
+    jade_troop_names = ["步兵玉石", "骑兵玉石", "弓兵玉石"]
+    
+    jade_troop_settings = {}
+    
+    for idx, jade_troop_name in enumerate(jade_troop_names):
+        with jade_troop_cols[idx]:
+            st.markdown(f"**{jade_troop_name}**")
+            st.caption("设置1-4号玉石等级")
+            
+            # 为每个兵种的4个玉石创建输入
+            jade_settings = {}
+            for i in range(1, 5):
+                default_current = 0
+                default_target = 0
+                
+                current = st.selectbox(f"玉石{i}当前", options=jade_level_options, index=default_current, key=f"jt_curr_{jade_troop_name}_{i}")
+                target = st.selectbox(f"玉石{i}目标", options=jade_level_options, index=default_target, key=f"jt_tar_{jade_troop_name}_{i}")
+                jade_settings[f"玉石{i}"] = {"current": current, "target": target}
+            
+            jade_troop_settings[jade_troop_name] = jade_settings
+    
+    # 根据兵种设置生成详细的JADES数据
+    # 步兵玉石：步兵上1-4，步兵下1-4
+    # 骑兵玉石：骑兵上1-4，骑兵下1-4
+    # 弓兵玉石：弓兵上1-4，弓兵下1-4
+    
+    troop_mapping = {
+        "步兵玉石": "步兵",
+        "骑兵玉石": "骑兵",
+        "弓兵玉石": "弓兵"
+    }
+    
+    for jade_troop_name, jade_settings in jade_troop_settings.items():
+        troop_prefix = troop_mapping[jade_troop_name]
+        
+        # 上位置玉石
+        for i in range(1, 5):
+            jade_name = f"{troop_prefix}上{i}"
+            JADES[jade_name] = {"current": jade_settings[f"玉石{i}"]["current"], 
+                                "target": jade_settings[f"玉石{i}"]["target"]}
+        
+        # 下位置玉石
+        for i in range(1, 5):
+            jade_name = f"{troop_prefix}下{i}"
+            JADES[jade_name] = {"current": jade_settings[f"玉石{i}"]["current"], 
+                                "target": jade_settings[f"玉石{i}"]["target"]}
 
 st.markdown("---")
 
-# --- 4. 核心数据与计算器类（完整复制，无需修改）---
+# --- 3. 核心数据与计算器类（完整复制，无需修改）---
 WEAPON_UPGRADE_COSTS = [
     [1000, 50, 0], [1500, 75, 0], [2000, 100, 0], [2500, 125, 0], [3000, 150, 0],
     [3500, 175, 0], [4000, 200, 0], [4500, 225, 0], [5000, 250, 0], [5500, 275, 0],
@@ -281,8 +377,11 @@ class UpgradeCalculator:
             "jade_left_after": jade_left_after
         }
 
-# --- 5. 计算并展示结果 (关键：这部分必须独立，不在类内) ---
+# --- 4. 计算并展示结果 ---
 st.header("📊 计算结果")
+
+# 显示当前版本信息
+st.info(f"当前使用: **{version}** - {'所有项目单独设置' if version == '详细版 (逐项设置)' else '按兵种批量设置 (消耗自动×2)'}")
 
 if st.button("🚀 开始计算", type="primary", use_container_width=True):
     with st.spinner("正在计算升级需求..."):
@@ -363,6 +462,9 @@ if st.button("🚀 开始计算", type="primary", use_container_width=True):
                 })
         if weapon_data:
             st.dataframe(pd.DataFrame(weapon_data), use_container_width=True)
+            # 简略版额外显示兵种汇总信息
+            if version == "简略版 (兵种批量设置)":
+                st.info("💡 简略版说明: 每个兵种的上下两件神兵设置相同，消耗已自动×2")
         else:
             st.info("所有神兵均无需升级")
     
@@ -381,8 +483,11 @@ if st.button("🚀 开始计算", type="primary", use_container_width=True):
                 })
         if jade_data:
             st.dataframe(pd.DataFrame(jade_data), use_container_width=True)
+            # 简略版额外显示兵种汇总信息
+            if version == "简略版 (兵种批量设置)":
+                st.info("💡 简略版说明: 每个兵种的8个玉石(上下各4个)设置相同，消耗已自动×8")
         else:
             st.info("所有玉石均无需升级")
 
 st.markdown("---")
-st.caption("提示：在侧边栏修改数据后，点击上方'开始计算'按钮更新结果。")
+st.caption("提示: 在侧边栏修改数据后，点击上方'开始计算'按钮更新结果。切换版本后，当前设置会被重置。")
