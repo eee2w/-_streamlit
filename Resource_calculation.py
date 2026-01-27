@@ -12,37 +12,87 @@ st.set_page_config(
 st.title("🎮 游戏资源计算器")
 st.markdown("---")
 
-# 侧边栏说明
-with st.sidebar:
-    st.header("使用说明")
-    st.markdown("""
-    ### 功能说明：
-    1. 计算使用所有资源包后的资源总量
-    2. 显示超过4:4:2:1比例的资源过剩情况
-    3. 显示通过资源包补充的资源量
-    
-    ### 单位说明：
-    - 所有资源单位均为"万"
-    - 例如：输入"10"表示10万资源
-    
-    ### 资源包说明：
-    - 1w资源包：提供1万资源（按肉/木计算）
-    - 10w资源包：提供10万资源
-    - 100w资源包：提供100万资源
-    """)
-    
-    st.markdown("---")
-    st.info("💡 提示：资源包会按照从大到小的顺序使用（100w → 10w → 1w）")
-
 # 创建两列布局
 col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("📦 已有资源")
-    meat = st.number_input("肉的数量 (万)", min_value=0.0, value=0.0, step=1.0, format="%.1f")
-    wood = st.number_input("木头数量 (万)", min_value=0.0, value=0.0, step=1.0, format="%.1f")
-    coal = st.number_input("煤的数量 (万)", min_value=0.0, value=0.0, step=1.0, format="%.1f")
-    iron = st.number_input("铁的数量 (万)", min_value=0.0, value=0.0, step=1.0, format="%.1f")
+    
+    # 肉
+    col_meat_num, col_meat_unit = st.columns([3, 1])
+    with col_meat_num:
+        meat_num = st.number_input(
+            "肉的数量",
+            min_value=0.0,
+            value=0.0,
+            step=1.0,
+            format="%.1f",
+            label_visibility="collapsed"
+        )
+    with col_meat_unit:
+        meat_unit = st.selectbox(
+            "单位",
+            ["万", "亿"],
+            key="meat_unit",
+            label_visibility="collapsed"
+        )
+    
+    # 木头
+    col_wood_num, col_wood_unit = st.columns([3, 1])
+    with col_wood_num:
+        wood_num = st.number_input(
+            "木头数量",
+            min_value=0.0,
+            value=0.0,
+            step=1.0,
+            format="%.1f",
+            label_visibility="collapsed"
+        )
+    with col_wood_unit:
+        wood_unit = st.selectbox(
+            "单位",
+            ["万", "亿"],
+            key="wood_unit",
+            label_visibility="collapsed"
+        )
+    
+    # 煤
+    col_coal_num, col_coal_unit = st.columns([3, 1])
+    with col_coal_num:
+        coal_num = st.number_input(
+            "煤的数量",
+            min_value=0.0,
+            value=0.0,
+            step=1.0,
+            format="%.1f",
+            label_visibility="collapsed"
+        )
+    with col_coal_unit:
+        coal_unit = st.selectbox(
+            "单位",
+            ["万", "亿"],
+            key="coal_unit",
+            label_visibility="collapsed"
+        )
+    
+    # 铁
+    col_iron_num, col_iron_unit = st.columns([3, 1])
+    with col_iron_num:
+        iron_num = st.number_input(
+            "铁的数量",
+            min_value=0.0,
+            value=0.0,
+            step=1.0,
+            format="%.1f",
+            label_visibility="collapsed"
+        )
+    with col_iron_unit:
+        iron_unit = st.selectbox(
+            "单位",
+            ["万", "亿"],
+            key="iron_unit",
+            label_visibility="collapsed"
+        )
 
 with col2:
     st.subheader("🎁 资源包数量")
@@ -63,6 +113,12 @@ strategy = st.radio(
 # 计算按钮
 st.markdown("---")
 calculate_button = st.button("🚀 开始计算", type="primary", use_container_width=True)
+
+def convert_to_wan(value, unit):
+    """将值转换为万单位"""
+    if unit == "亿":
+        return value * 10000
+    return value
 
 def calculate_resources(meat, wood, coal, iron, pack_1w, pack_10w, pack_100w, strategy_type):
     """
@@ -286,6 +342,12 @@ def calculate_resources(meat, wood, coal, iron, pack_1w, pack_10w, pack_100w, st
 
 # 点击按钮时进行计算
 if calculate_button:
+    # 转换单位为万
+    meat = convert_to_wan(meat_num, meat_unit)
+    wood = convert_to_wan(wood_num, wood_unit)
+    coal = convert_to_wan(coal_num, coal_unit)
+    iron = convert_to_wan(iron_num, iron_unit)
+    
     # 确定策略类型
     strategy_type = 0 if "按比例补充" in strategy else 1
     
