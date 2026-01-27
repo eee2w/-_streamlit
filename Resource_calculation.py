@@ -54,7 +54,7 @@ st.markdown("---")
 st.subheader("⚙️ 补充策略选择")
 strategy = st.radio(
     "请选择资源包使用策略：",
-    ["按比例补充（尽量满足4:4:2:1的比例）", "按顺序补充（严格按照肉→木→煤→铁的顺序，先补肉到与木相等，再补煤）"],
+    ["按比例补充（尽量满足4:4:2:1的比例）", "按顺序补充（严格按照肉→木→煤→铁的顺序，补充到与最多资源的比例相同）"],
     horizontal=True
 )
 
@@ -113,78 +113,110 @@ def calculate_resources(meat, wood, coal, iron, pack_1w, pack_10w, pack_100w, st
                 iron += iron_gain
                 iron_multiple = iron / RATIO_IRON
     
-    # 策略2: 按顺序补充（根据您的例子实现）
+    # 策略2: 按顺序补充
     else:  # 按顺序补充
-        # 使用所有资源包，按照从大到小的顺序
-        for pack_value in packs:
-            # 阶段1: 先补充肉，直到肉 >= 木
-            if meat < wood:
+        # 计算当前各资源的比例倍数
+        meat_multiple = meat / RATIO_MEAT
+        wood_multiple = wood / RATIO_WOOD
+        coal_multiple = coal / RATIO_COAL
+        iron_multiple = iron / RATIO_IRON
+        
+        # 找到最大的比例倍数
+        max_multiple = max(meat_multiple, wood_multiple, coal_multiple, iron_multiple)
+        
+        # 阶段1: 补充肉，直到肉的比例倍数等于最大比例倍数
+        for pack_value in packs[:]:  # 使用副本遍历
+            if meat_multiple < max_multiple:
+                # 计算需要多少肉才能达到最大倍数
+                meat_needed = max_multiple * RATIO_MEAT - meat
+                
+                # 使用当前最大的包补充肉
                 meat += pack_value
-                continue
-            
-            # 阶段2: 然后补充木头，直到木头 >= 煤*2 (因为木:煤=4:2=2:1)
-            # 但根据您的例子，当肉=木时，直接补充煤，所以这里可能应该是：
-            # 实际上，您的例子中，当肉>=木时，就补充煤了，没有补充木的步骤
-            
-            # 根据您的例子：肉=4,木=4,煤=0,铁=0，有1w资源包，会补充煤
-            # 所以这里应该是：如果肉 >= 木，就补充煤
-            # 但是，如果煤 >= 铁*2呢？应该补充铁？
-            
-            # 让我们按照这个逻辑：
-            # 1. 如果肉 < 木，补充肉
-            # 2. 否则（肉 >= 木），补充煤
-            # 3. 但是，如果煤 >= 铁*2，那么补充铁
-            
-            # 但这样煤会一直补充，不会补充铁
-            # 所以应该是：
-            # 1. 先补充肉，直到肉 >= 木
-            # 2. 然后补充木，直到木 >= 煤*2
-            # 3. 然后补充煤，直到煤 >= 铁*2
-            # 4. 最后补充铁
-            
-            # 但您的例子显示，当肉=木时，直接补充煤了，没有补充木
-            # 这可能是因为木已经满足条件了（木 >= 煤*2，因为煤=0，所以0*2=0，木=4>=0）
-            
-            # 所以正确的逻辑应该是：
-            # 对于每个资源包，按顺序检查：
-            # 1. 如果肉 < 木，补充肉
-            # 2. 否则如果木 < 煤*2，补充木
-            # 3. 否则如果煤 < 铁*2，补充煤
-            # 4. 否则补充铁
-            
-            # 但是根据您的例子，当肉=4,木=4,煤=0,铁=0时：
-            # - 肉 >= 木 (4 >= 4) 成立，所以不补充肉
-            # - 木 >= 煤*2 (4 >= 0*2=0) 成立，所以不补充木
-            # - 煤 < 铁*2 (0 < 0*2=0) 不成立，所以不补充煤？
-            # 这会进入补充铁，但您的例子是补充煤
-            
-            # 所以这里需要仔细思考
-            # 让我们重新看例子：肉=2,木=4,煤=0,铁=0
-            # 当肉<木时，补充肉直到肉=木
-            # 当肉=木时，开始补充煤
-            
-            # 这意味着跳过木的检查？或者木的检查条件不同？
-            
-            # 我猜测实际的规则是：按照4:4:2:1的比例，肉和木应该是相等的，煤应该是肉的一半，铁应该是肉的四分之一
-            # 所以顺序补充是：
-            # 1. 补充肉，直到肉 = 木
-            # 2. 补充木，直到木 = 肉（这已经成立）或者木 = 煤*2？
-            # 3. 补充煤，直到煤 = 肉/2
-            # 4. 补充铁，直到铁 = 肉/4
-            
-            # 但根据例子，肉=4时，煤应该是2，但只补充了0.5，所以可能是在资源包足够的情况下，会补充到这些目标值
-            
-            # 为了匹配您的例子，我暂时实现一个简化的逻辑：
-            # 1. 如果肉 < 木，补充肉
-            # 2. 否则，补充煤
-            
-            # 这虽然能匹配您的例子，但不完整
-            
-            # 让我们先按照这个简化的逻辑实现，至少能匹配您给出的例子
+                meat_multiple = meat / RATIO_MEAT
+                packs.remove(pack_value)
+                
+                # 更新最大倍数（因为补充肉后可能肉成为新的最大）
+                max_multiple = max(max_multiple, meat_multiple)
             else:
-                # 补充煤
+                break
+        
+        # 阶段2: 补充木头，直到木头的比例倍数等于最大比例倍数
+        for pack_value in packs[:]:
+            if wood_multiple < max_multiple:
+                # 计算需要多少木头才能达到最大倍数
+                wood_needed = max_multiple * RATIO_WOOD - wood
+                
+                # 使用当前最大的包补充木头
+                wood += pack_value
+                wood_multiple = wood / RATIO_WOOD
+                packs.remove(pack_value)
+                
+                # 更新最大倍数
+                max_multiple = max(max_multiple, wood_multiple)
+            else:
+                break
+        
+        # 阶段3: 补充煤，直到煤的比例倍数等于最大比例倍数
+        for pack_value in packs[:]:
+            if coal_multiple < max_multiple:
+                # 计算需要多少煤才能达到最大倍数
+                coal_needed = max_multiple * RATIO_COAL - coal
+                
+                # 使用当前最大的包补充煤
                 coal_gain = pack_value / 2
                 coal += coal_gain
+                coal_multiple = coal / RATIO_COAL
+                packs.remove(pack_value)
+                
+                # 更新最大倍数
+                max_multiple = max(max_multiple, coal_multiple)
+            else:
+                break
+        
+        # 阶段4: 补充铁，直到铁的比例倍数等于最大比例倍数
+        for pack_value in packs[:]:
+            if iron_multiple < max_multiple:
+                # 计算需要多少铁才能达到最大倍数
+                iron_needed = max_multiple * RATIO_IRON - iron
+                
+                # 使用当前最大的包补充铁
+                iron_gain = pack_value / 4
+                iron += iron_gain
+                iron_multiple = iron / RATIO_IRON
+                packs.remove(pack_value)
+                
+                # 更新最大倍数
+                max_multiple = max(max_multiple, iron_multiple)
+            else:
+                break
+        
+        # 阶段5: 如果还有剩余自选包，切换为按比例补充
+        if packs:
+            # 重新计算当前比例倍数
+            meat_multiple = meat / RATIO_MEAT
+            wood_multiple = wood / RATIO_WOOD
+            coal_multiple = coal / RATIO_COAL
+            iron_multiple = iron / RATIO_IRON
+            
+            # 按比例补充剩余自选包
+            for pack_value in packs:
+                # 找出比例倍数最小的资源
+                min_multiple = min(meat_multiple, wood_multiple, coal_multiple, iron_multiple)
+                
+                if meat_multiple == min_multiple:
+                    meat += pack_value
+                    meat_multiple = meat / RATIO_MEAT
+                elif wood_multiple == min_multiple:
+                    wood += pack_value
+                    wood_multiple = wood / RATIO_WOOD
+                elif coal_multiple == min_multiple:
+                    coal_gain = pack_value / 2
+                    coal += coal_gain
+                    coal_multiple = coal / RATIO_COAL
+                else:
+                    iron_gain = pack_value / 4
+                    iron += iron_gain
+                    iron_multiple = iron / RATIO_IRON
     
     # 计算最终比例和理想资源量
     final_min_ratio = min(
