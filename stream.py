@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # ============= Streamlit 网页应用 =============
-st.set_page_config(page_title="神兵玉石升级计算器", layout="wide")
+st.set_page_config(page_title="神兵玉石升级计算器-20260127风采", layout="wide")
 st.title("⚔️💎 神兵玉石升级计算器")
 st.markdown("---")
 
@@ -11,23 +11,24 @@ with st.sidebar:
     st.header("📝 请输入你的数据")
     
     # 全局积分
-    CURRENT_POINTS = st.number_input("当前积分", min_value=0, value=20347, step=1000)
+    CURRENT_POINTS = st.number_input("当前积分", min_value=0, value=0, step=1)
     
     st.subheader("神兵材料库存")
-    CURRENT_WOOD = st.number_input("木头数量", min_value=0, value=9859, step=100)
-    CURRENT_MITHRIL = st.number_input("精金数量", min_value=0, value=904, step=10)
-    CURRENT_LAPIS = st.number_input("青金石数量", min_value=0, value=231, step=5)
+    CURRENT_WOOD = st.number_input("木头数量", min_value=0, value=0, step=1)
+    CURRENT_MITHRIL = st.number_input("精金数量", min_value=0, value=0, step=1)
+    CURRENT_LAPIS = st.number_input("青金石数量", min_value=0, value=0, step=1)
     
     st.subheader("玉石材料库存")
-    CURRENT_CARVING_KNIFE = st.number_input("琢玉刀数量", min_value=0, value=295, step=10)
-    CURRENT_UNPOLISHED_JADE = st.number_input("璞玉数量", min_value=0, value=492, step=10)
+    CURRENT_CARVING_KNIFE = st.number_input("琢玉刀数量", min_value=0, value=0, step=1)
+    CURRENT_UNPOLISHED_JADE = st.number_input("璞玉数量", min_value=0, value=0, step=1)
     
     st.subheader("兑换比例（如无特殊需求请勿修改）")
+    # 将所有兑换比例改为浮点数
     POINTS_PER_WOOD = st.number_input("木头兑换比例 (积分/个)", min_value=0.0, value=0.1, step=0.1, format="%.2f")
-    POINTS_PER_MITHRIL = st.number_input("精金兑换比例 (积分/个)", min_value=0, value=2, step=1)
-    POINTS_PER_LAPIS = st.number_input("青金石兑换比例 (积分/个)", min_value=0, value=6, step=1)
-    POINTS_PER_CARVING_KNIFE = st.number_input("琢玉刀兑换比例 (积分/个)", min_value=0, value=30, step=5)
-    POINTS_PER_UNPOLISHED_JADE = st.number_input("璞玉兑换比例 (积分/个)", min_value=0, value=6, step=1)
+    POINTS_PER_MITHRIL = st.number_input("精金兑换比例 (积分/个)", min_value=0.0, value=2.0, step=0.1, format="%.2f")
+    POINTS_PER_LAPIS = st.number_input("青金石兑换比例 (积分/个)", min_value=0.0, value=6.0, step=0.1, format="%.2f")
+    POINTS_PER_CARVING_KNIFE = st.number_input("琢玉刀兑换比例 (积分/个)", min_value=0.0, value=30.0, step=0.1, format="%.2f")
+    POINTS_PER_UNPOLISHED_JADE = st.number_input("璞玉兑换比例 (积分/个)", min_value=0.0, value=6.0, step=0.1, format="%.2f")
 
 # --- 2. 神兵等级选择（在主页面使用多列布局）---
 st.header("⚔️ 神兵升级目标")
@@ -43,18 +44,9 @@ WEAPONS = {}
 for idx, weapon_name in enumerate(weapon_names):
     with weapon_cols[idx]:
         st.markdown(f"**{weapon_name}**")
-        # 设置智能默认索引
-        if "骑兵" in weapon_name or "弓兵" in weapon_name:
-            current_default = weapon_level_options.index("绿色1级")
-        else:
-            current_default = weapon_level_options.index("紫色1级")
-            
-        if "骑兵" in weapon_name:
-            target_default = weapon_level_options.index("绿色1级")
-        elif "弓兵" in weapon_name:
-            target_default = weapon_level_options.index("蓝色3级")
-        else:
-            target_default = weapon_level_options.index("紫色4级")
+        # 将所有神兵的默认值都设为"未拥有"（索引0）
+        current_default = 0  # "未拥有"的索引
+        target_default = 0   # "未拥有"的索引
             
         current_level = st.selectbox("当前等级", options=weapon_level_options, index=current_default, key=f"w_curr_{weapon_name}")
         target_level = st.selectbox("目标等级", options=weapon_level_options, index=target_default, key=f"w_tar_{weapon_name}")
@@ -80,14 +72,9 @@ for jade_type in jade_types:
             jade_name = f"{jade_type}{i}"
             with cols[i-1]:
                 st.markdown(f"**{jade_name}**")
-                # 设置默认值
-                if "步兵" in jade_type:
-                    default_current, default_target = 2, 5
-                elif "骑兵" in jade_type:
-                    default_current, default_target = 1, 1
-                else: # 弓兵
-                    default_current = 2 if i==1 and "弓兵上" in jade_type else 1
-                    default_target = 3
+                # 将所有玉石的默认值都设为0（未激活）
+                default_current = 0  # 0级
+                default_target = 0   # 0级
                 
                 current = st.selectbox("当前", options=jade_level_options, index=default_current, key=f"j_curr_{jade_name}")
                 target = st.selectbox("目标", options=jade_level_options, index=default_target, key=f"j_tar_{jade_name}")
