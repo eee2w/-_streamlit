@@ -14,24 +14,32 @@ st.markdown("---")
 # 已有资源部分
 st.subheader("📦 已有资源")
 
-# 创建每行资源的布局函数
+# 创建每行资源的布局函数 - 修改为水平排列
 def create_resource_input(label):
-    col_num, col_unit = st.columns([3, 1])
+    col_num, col_unit = st.columns([4, 1])
     with col_num:
-        num = st.number_input(
+        # 使用text_input而不是number_input，允许空值
+        num_str = st.text_input(
             f"{label}数量",
-            min_value=0.0,
-            value=0.0,
-            step=1.0,
-            format="%.1f",
+            value="",  # 空值
+            placeholder="请输入",
             key=f"{label}_num"
         )
     with col_unit:
+        st.markdown('<div style="margin-top: 28px;"></div>', unsafe_allow_html=True)  # 垂直对齐
         unit = st.selectbox(
             "单位",
             ["万", "亿"],
-            key=f"{label}_unit"
+            key=f"{label}_unit",
+            label_visibility="collapsed"
         )
+    
+    # 将输入转换为浮点数，如果为空则返回0
+    try:
+        num = float(num_str) if num_str else 0.0
+    except ValueError:
+        num = 0.0
+    
     return num, unit
 
 # 输入每种资源
@@ -44,9 +52,35 @@ st.markdown("---")
 
 # 资源包数量部分
 st.subheader("🎁 资源包数量")
-pack_1w = st.number_input("1w资源包数量", min_value=0, value=0, step=1)
-pack_10w = st.number_input("10w资源包数量", min_value=0, value=0, step=1)
-pack_100w = st.number_input("100w资源包数量", min_value=0, value=0, step=1)
+
+# 创建资源包数量输入函数 - 也设为空值
+def create_pack_input(label, description):
+    col_label, col_input = st.columns([3, 1])
+    with col_label:
+        st.markdown(f"**{label}**")
+        st.caption(description)
+    with col_input:
+        # 使用text_input，允许空值
+        pack_str = st.text_input(
+            label,
+            value="",
+            placeholder="0",
+            key=f"{label}_input",
+            label_visibility="collapsed"
+        )
+    
+    # 将输入转换为整数，如果为空则返回0
+    try:
+        pack_value = int(pack_str) if pack_str else 0
+    except ValueError:
+        pack_value = 0
+    
+    return pack_value
+
+# 输入资源包数量
+pack_1w = create_pack_input("1w资源包数量", "每个1万资源")
+pack_10w = create_pack_input("10w资源包数量", "每个10万资源")
+pack_100w = create_pack_input("100w资源包数量", "每个100万资源")
 
 st.markdown("---")
 
@@ -88,10 +122,10 @@ def calculate_resources(meat, wood, coal, iron, pack_1w, pack_10w, pack_100w, st
     # 策略1: 按比例补充
     if strategy_type == 0:  # 按比例补充
         # 计算当前各资源的比例倍数
-        meat_multiple = meat / RATIO_MEAT
-        wood_multiple = wood / RATIO_WOOD
-        coal_multiple = coal / RATIO_COAL
-        iron_multiple = iron / RATIO_IRON
+        meat_multiple = meat / RATIO_MEAT if RATIO_MEAT > 0 else 0
+        wood_multiple = wood / RATIO_WOOD if RATIO_WOOD > 0 else 0
+        coal_multiple = coal / RATIO_COAL if RATIO_COAL > 0 else 0
+        iron_multiple = iron / RATIO_IRON if RATIO_IRON > 0 else 0
         
         # 使用所有自选包（从大到小）
         for pack_value in packs:
@@ -116,10 +150,10 @@ def calculate_resources(meat, wood, coal, iron, pack_1w, pack_10w, pack_100w, st
     # 策略2: 按顺序补充
     else:  # 按顺序补充
         # 计算当前各资源的比例倍数
-        meat_multiple = meat / RATIO_MEAT
-        wood_multiple = wood / RATIO_WOOD
-        coal_multiple = coal / RATIO_COAL
-        iron_multiple = iron / RATIO_IRON
+        meat_multiple = meat / RATIO_MEAT if RATIO_MEAT > 0 else 0
+        wood_multiple = wood / RATIO_WOOD if RATIO_WOOD > 0 else 0
+        coal_multiple = coal / RATIO_COAL if RATIO_COAL > 0 else 0
+        iron_multiple = iron / RATIO_IRON if RATIO_IRON > 0 else 0
         
         # 找到最大的比例倍数
         max_multiple = max(meat_multiple, wood_multiple, coal_multiple, iron_multiple)
