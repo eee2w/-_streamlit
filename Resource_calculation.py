@@ -23,7 +23,7 @@ def create_resource_input(label):
             min_value=0.0,
             value=0.0,
             step=1.0,
-            format="%.1f",
+            format="%.2f",
             key=f"{label}_num"
         )
     with col_unit:
