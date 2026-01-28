@@ -8,7 +8,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# 自定义CSS样式
+# 自定义CSS样式 (为可点击的div增加了指针样式)
 st.markdown("""
 <style>
     .header {
@@ -45,6 +45,7 @@ st.markdown("""
         margin-bottom: 15px;
     }
     
+    /* 修改：将 .app-link 从 a 标签的样式改为 div 的样式，并保留指针 */
     .app-link {
         display: inline-block;
         background: #667eea;
@@ -55,6 +56,7 @@ st.markdown("""
         font-weight: 500;
         font-size: 0.9rem;
         transition: background 0.3s ease;
+        cursor: pointer; /* 关键：让div显示为可点击的手型指针 */
     }
     
     .app-link:hover {
@@ -100,25 +102,25 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# 您的3个应用信息（请替换为您的实际链接）
+# 您的应用信息列表
 apps = [
     {
         "name": "资源计算器",
-        "url": "https://azbapcbtjvkpq8esq5q8f2.streamlit.app/",  # 替换为您的实际链接
+        "url": "https://azbapcbtjvkpq8esq5q8f2.streamlit.app/",
         "description": "计算包裹内资源总量",
         "icon": "📊",
         "status": "online"
     },
     {
-        "name": "神兵玉石消耗计算",  # 第二个应用的名字
-        "url": "https://eu5fctgjsakgp8strse8ku.streamlit.app/",  # 替换为您的实际链接
+        "name": "神兵玉石消耗计算",
+        "url": "https://eu5fctgjsakgp8strse8ku.streamlit.app/",
         "description": "计算神兵玉石升级消耗以及活动积分兑换是否充足",
         "icon": "⚔️",
         "status": "online"
     },
     {
-        "name": "积分兑换神兵玉石材料自动推荐",  # 第三个应用的名字
-        "url": "https://cenpecvplwojqgxvtn5y5n.streamlit.app/",  # 替换为您的实际链接
+        "name": "积分兑换神兵玉石材料自动推荐",
+        "url": "https://cenpecvplwojqgxvtn5y5n.streamlit.app/",
         "description": "智能推荐活动积分如何兑换神兵玉石材料",
         "icon": "📅",
         "status": "online"
@@ -126,16 +128,13 @@ apps = [
 ]
 
 # 显示应用卡片
-for i, app in enumerate(apps):
+for app in apps:
     # 状态标签
-    if app["status"] == "online":
-        status_text = "（可使用）"
-        status_class = "status-online"
-    else:
-        status_text = "（开发中）"
-        status_class = "status-dev"
+    status_text = "（可使用）" if app["status"] == "online" else "（开发中）"
+    status_class = "status-online" if app["status"] == "online" else "status-dev"
     
     # 创建卡片HTML
+    # 关键修改：将 <a> 标签替换为具有 onclick 事件的 <div>
     card_html = f"""
     <div class="app-card">
         <div class="app-title">
@@ -145,18 +144,18 @@ for i, app in enumerate(apps):
         <div class="app-description">
             {app["description"]}
         </div>
-        <a href="{app["url"]}" target="_blank" class="app-link">
+        <!-- 核心改动：用 div 替代 a 标签，通过 onclick 跳转 -->
+        <div class="app-link" onclick="window.open('{app["url"]}', '_blank');">
             打开应用 →
-        </a>
+        </div>
     </div>
     """
-    
     # 渲染卡片
-    html(card_html, height=150)
+    html(card_html)
 
 # 添加管理员反馈提示
 st.markdown("""
 <div class="feedback-note">
-    <strong>💡 提示：</strong> 遇到问题请找玩大蛋反馈
+    <strong>💡 提示：</strong> 遇到问题或需要功能改进，请找管理员反馈
 </div>
 """, unsafe_allow_html=True)
