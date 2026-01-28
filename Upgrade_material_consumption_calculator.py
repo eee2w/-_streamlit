@@ -182,7 +182,57 @@ else:
 
 st.markdown("---")
 
-# --- 3. 核心数据与计算器类（完整复制，无需修改）---
+# --- 新增：额外兑换部分 ---
+st.header("🛍️ 额外兑换部分")
+
+# 初始化session_state用于存储额外兑换项目
+if 'extra_items' not in st.session_state:
+    st.session_state.extra_items = [{'name': '', 'points_per': 0.0, 'times': 0}]
+
+# 显示所有额外兑换项目
+for i, item in enumerate(st.session_state.extra_items):
+    cols = st.columns([3, 2, 2, 1])
+    with cols[0]:
+        st.session_state.extra_items[i]['name'] = st.text_input(
+            "物品名称", 
+            value=item['name'],
+            placeholder="如：元宝、将魂等",
+            key=f"extra_name_{i}"
+        )
+    with cols[1]:
+        st.session_state.extra_items[i]['points_per'] = st.number_input(
+            "单次兑换积分", 
+            min_value=0.0, 
+            value=float(item['points_per']),
+            step=1.0,
+            format="%.1f",
+            key=f"extra_points_{i}"
+        )
+    with cols[2]:
+        st.session_state.extra_items[i]['times'] = st.number_input(
+            "兑换次数", 
+            min_value=0, 
+            value=int(item['times']),
+            step=1,
+            key=f"extra_times_{i}"
+        )
+    with cols[3]:
+        if i > 0:  # 第一个项目不显示删除按钮
+            if st.button("❌", key=f"delete_{i}", help="删除此项"):
+                del st.session_state.extra_items[i]
+                st.rerun()
+
+# 添加新项目的按钮
+if st.button("➕ 添加兑换项目", type="secondary", use_container_width=False):
+    st.session_state.extra_items.append({'name': '', 'points_per': 0.0, 'times': 0})
+    st.rerun()
+
+# 计算额外兑换的总积分
+extra_points_total = sum(item['points_per'] * item['times'] for item in st.session_state.extra_items)
+
+st.markdown("---")
+
+# --- 3. 核心数据与计算器类（已修改以包含额外兑换）---
 WEAPON_UPGRADE_COSTS = [
     [1000, 50, 0], [1500, 75, 0], [2000, 100, 0], [2500, 125, 0], [3000, 150, 0],
     [3500, 175, 0], [4000, 200, 0], [4500, 225, 0], [5000, 250, 0], [5500, 275, 0],
@@ -224,7 +274,10 @@ class UpgradeCalculator:
         self.current_unpolished_jade = CURRENT_UNPOLISHED_JADE if CURRENT_UNPOLISHED_JADE is not None else 0
         self.jades = JADES
         self.jade_upgrade_costs = JADE_UPGRADE_COSTS
-    
+        
+        # 额外兑换部分
+        self.extra_items = st.session_state.extra_items
+        
     def level_str_to_number(self, level_str):
         level_str = level_str.strip()
         if level_str == "未拥有": return 0
@@ -308,7 +361,32 @@ class UpgradeCalculator:
             "need_upgrade": True
         }
     
+    def calculate_extra_items(self):
+        """计算额外兑换项目的总积分消耗"""
+        extra_points_needed = 0
+        extra_items_details = []
+        
+        for item in self.extra_items:
+            if item['name'] and item['points_per'] > 0 and item['times'] > 0:
+                item_total = item['points_per'] * item['times']
+                extra_points_needed += item_total
+                extra_items_details.append({
+                    'name': item['name'],
+                    'points_per': item['points_per'],
+                    'times': item['times'],
+                    'total': item_total
+                })
+        
+        return {
+            'extra_points_needed': extra_points_needed,
+            'extra_items_details': extra_items_details
+        }
+    
     def calculate_all_upgrades(self):
+        # 计算额外兑换部分
+        extra_results = self.calculate_extra_items()
+        extra_points_needed = extra_results['extra_points_needed']
+        
         # 神兵升级计算
         weapon_results = {}
         weapon_wood_needed = weapon_mithril_needed = weapon_lapis_needed = 0
@@ -337,13 +415,14 @@ class UpgradeCalculator:
         knife_need_buy = max(0, jade_knife_needed - self.current_carving_knife)
         jade_need_buy = max(0, jade_jade_needed - self.current_unpolished_jade)
         
-        # 计算所需总积分
+        # 计算所需总积分（包括额外兑换）
         total_points_needed = (
             wood_need_buy * self.points_per_wood +
             mithril_need_buy * self.points_per_mithril +
             lapis_need_buy * self.points_per_lapis +
             knife_need_buy * self.points_per_carving_knife +
-            jade_need_buy * self.points_per_unpolished_jade
+            jade_need_buy * self.points_per_unpolished_jade +
+            extra_points_needed  # 添加额外兑换积分
         )
         
         # 计算升级后剩余材料
@@ -359,11 +438,13 @@ class UpgradeCalculator:
         return {
             "weapon_results": weapon_results,
             "jade_results": jade_results,
+            "extra_results": extra_results,
             "weapon_wood_needed": weapon_wood_needed,
             "weapon_mithril_needed": weapon_mithril_needed,
             "weapon_lapis_needed": weapon_lapis_needed,
             "jade_knife_needed": jade_knife_needed,
             "jade_jade_needed": jade_jade_needed,
+            "extra_points_needed": extra_points_needed,
             "wood_need_buy": wood_need_buy,
             "mithril_need_buy": mithril_need_buy,
             "lapis_need_buy": lapis_need_buy,
@@ -424,7 +505,7 @@ if st.button("🚀 开始计算", type="primary", use_container_width=True):
     
     # 材料需求
     with st.expander("📦 详细材料需求与剩余情况", expanded=True):
-        tab1, tab2 = st.tabs(["神兵材料", "玉石材料"])
+        tab1, tab2, tab3 = st.tabs(["神兵材料", "玉石材料", "额外兑换"])
         with tab1:
             c1, c2, c3 = st.columns(3)
             c1.metric("木头需求/剩余", f"{results['weapon_wood_needed']} / {results['wood_left_after']}")
@@ -434,6 +515,13 @@ if st.button("🚀 开始计算", type="primary", use_container_width=True):
             c1, c2 = st.columns(2)
             c1.metric("琢玉刀需求/剩余", f"{results['jade_knife_needed']} / {results['knife_left_after']}")
             c2.metric("璞玉需求/剩余", f"{results['jade_jade_needed']} / {results['jade_left_after']}")
+        with tab3:
+            if results['extra_points_needed'] > 0:
+                st.metric("额外兑换总积分", f"{results['extra_points_needed']:.1f}")
+                extra_df = pd.DataFrame(results['extra_results']['extra_items_details'])
+                st.dataframe(extra_df, use_container_width=True)
+            else:
+                st.info("无额外兑换项目")
     
     # 需要购买的材料
     if any([results['wood_need_buy'], results['mithril_need_buy'], results['lapis_need_buy'], 
@@ -450,6 +538,20 @@ if st.button("🚀 开始计算", type="primary", use_container_width=True):
         for idx, (name, amount, icon) in enumerate(materials):
             if amount > 0:
                 need_buy_cols[idx].metric(f"{icon} {name}", f"{amount}个")
+    
+    # 额外兑换详情
+    if results['extra_points_needed'] > 0:
+        with st.expander("🛍️ 额外兑换详情"):
+            extra_data = []
+            for item in results['extra_results']['extra_items_details']:
+                extra_data.append({
+                    "物品名称": item['name'],
+                    "单次积分": f"{item['points_per']:.1f}",
+                    "兑换次数": item['times'],
+                    "小计积分": f"{item['total']:.1f}"
+                })
+            if extra_data:
+                st.dataframe(pd.DataFrame(extra_data), use_container_width=True)
     
     # 神兵升级详情表格
     with st.expander("⚔️ 神兵升级详情"):
