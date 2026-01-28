@@ -150,7 +150,7 @@ st.markdown("""
 
 # 获取当前页面URL（导航页自身链接）
 # 请替换下面的URL为您的实际导航页地址
-navigation_page_url = "https://your-navigation-app.streamlit.app/"  # 请替换为您的实际导航页地址
+navigation_page_url = "https://c3vybqtda5nihxdv299mkb.streamlit.app/"  # 请替换为您的实际导航页地址
 
 # 微信环境提示 - 完全按照您提供的文字，现在左对齐
 st.markdown("""
