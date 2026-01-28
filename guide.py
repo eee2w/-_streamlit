@@ -195,7 +195,7 @@ apps = [
     {
         "name": "神兵玉石消耗计算",
         "url": "https://eu5fctgjsakgp8strse8ku.streamlit.app/",
-        "description": "计算神兵玉石升级消耗以及活动积分兑换是否充足",
+        "description": "计算神兵玉石升级消耗及活动积分兑换是否充足",
         "icon": "⚔️",
         "status": "online"
     },
@@ -244,7 +244,7 @@ for app in apps:
 st.markdown("""
 <div class="footer-tip">
     <strong>使用提示：</strong><br>
-    1. 电脑浏览器可直接点击"打开应用"按钮<br>
-    2. 手机微信内建议复制链接到浏览器访问
+    1. 电脑用户直接点击即可<br>
+    2. 遇到问题请向玩大蛋反馈
 </div>
 """, unsafe_allow_html=True)
