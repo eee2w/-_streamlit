@@ -110,7 +110,7 @@ apps = [
         "url": "https://cenpecvplwojqgxvtn5y5n.streamlit.app/",  # 替换为您的实际链接
         "description": "智能推荐活动积分如何兑换神兵玉石材料",
         "icon": "📅",
-        "status": "dev"
+        "status": "online"
     }
 ]
 
