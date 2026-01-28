@@ -93,22 +93,22 @@ st.markdown("""
 apps = [
     {
         "name": "资源计算器",
-        "url": "https://your-resource-calculator.streamlit.app",  # 替换为您的实际链接
-        "description": "智能计算游戏资源分配，优化资源包使用策略",
+        "url": "https://azbapcbtjvkpq8esq5q8f2.streamlit.app/",  # 替换为您的实际链接
+        "description": "计算包裹内资源总量",
         "icon": "📊",
         "status": "online"
     },
     {
-        "name": "战力分析器",  # 第二个应用的名字
-        "url": "https://your-second-app.streamlit.app",  # 替换为您的实际链接
-        "description": "分析角色战力，提供装备搭配建议",
+        "name": "神兵玉石消耗计算",  # 第二个应用的名字
+        "url": "https://eu5fctgjsakgp8strse8ku.streamlit.app/",  # 替换为您的实际链接
+        "description": "计算神兵玉石升级消耗以及活动积分兑换是否充足",
         "icon": "⚔️",
         "status": "online"
     },
     {
-        "name": "活动规划器",  # 第三个应用的名字
-        "url": "https://your-third-app.streamlit.app",  # 替换为您的实际链接
-        "description": "规划游戏活动参与，计算最优时间安排",
+        "name": "积分兑换神兵玉石材料自动推荐",  # 第三个应用的名字
+        "url": "https://cenpecvplwojqgxvtn5y5n.streamlit.app/",  # 替换为您的实际链接
+        "description": "智能推荐活动积分如何兑换神兵玉石材料",
         "icon": "📅",
         "status": "dev"
     }
