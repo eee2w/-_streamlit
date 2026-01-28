@@ -107,8 +107,9 @@ st.markdown("""
         color: #10B981;
     }
     
+    /* 微信提示样式 - 改为左对齐 */
     .wechat-tip {
-        text-align: center;
+        text-align: left; /* 从center改为left */
         margin: 20px 0;
         padding: 12px;
         background-color: #fff8e1;
@@ -151,7 +152,7 @@ st.markdown("""
 # 请替换下面的URL为您的实际导航页地址
 navigation_page_url = "https://your-navigation-app.streamlit.app/"  # 请替换为您的实际导航页地址
 
-# 微信环境提示 - 完全按照您提供的文字
+# 微信环境提示 - 完全按照您提供的文字，现在左对齐
 st.markdown("""
 <div class="wechat-tip">
     手机端微信直接点击链接进来的在这里点击"打开应用"可能无法跳转，需要复制该导航页链接或者单个应用链接到网页端打开
