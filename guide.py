@@ -8,62 +8,13 @@ st.set_page_config(
     layout="centered"
 )
 
-# 注入复制功能所需的JavaScript
-copy_js = """
-<script>
-function copyAppUrl(url, appName) {
-    // 方法1: 使用现代Clipboard API
-    if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(url)
-            .then(() => {
-                alert("✓ 已复制【" + appName + "】链接！\\n\\n链接已保存到剪贴板，请在浏览器中粘贴访问。");
-            })
-            .catch(err => {
-                // 如果现代API失败，回退到传统方法
-                fallbackCopyText(url, appName);
-            });
-    } else {
-        // 方法2: 传统方法作为备选
-        fallbackCopyText(url, appName);
-    }
-}
-
-function fallbackCopyText(url, appName) {
-    // 创建临时输入框
-    var textArea = document.createElement("textarea");
-    textArea.value = url;
-    textArea.style.position = "fixed";
-    textArea.style.left = "-999999px";
-    textArea.style.top = "-999999px";
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    
-    try {
-        var successful = document.execCommand('copy');
-        if (successful) {
-            alert("✓ 已复制【" + appName + "】链接！\\n\\n链接已保存到剪贴板，请在浏览器中粘贴访问。");
-        } else {
-            alert("⚠️ 复制失败，请手动选择并复制链接：\\n\\n" + url);
-        }
-    } catch (err) {
-        alert("⚠️ 复制失败，请手动选择并复制链接：\\n\\n" + url);
-    }
-    
-    document.body.removeChild(textArea);
-}
-</script>
-"""
-
-st.markdown(copy_js, unsafe_allow_html=True)
-
 # 自定义CSS样式
 st.markdown("""
 <style>
     .header {
         text-align: center;
         padding: 20px 0;
-        margin-bottom: 30px;
+        margin-bottom: 20px;
     }
     
     .app-card {
@@ -91,14 +42,38 @@ st.markdown("""
     .app-description {
         font-size: 0.95rem;
         color: #666;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
         line-height: 1.5;
+    }
+    
+    /* 链接显示区域样式 */
+    .link-display {
+        background-color: #f8f9fa;
+        border-radius: 6px;
+        padding: 10px 12px;
+        margin: 12px 0;
+        border: 1px solid #e0e0e0;
+        word-break: break-all;
+        font-size: 0.85rem;
+        font-family: 'Courier New', monospace;
+        color: #2c3e50;
+        user-select: text;
+        -webkit-user-select: text;
+        line-height: 1.4;
+    }
+    
+    .copy-hint {
+        font-size: 0.8rem;
+        color: #666;
+        text-align: center;
+        margin: 5px 0 15px 0;
+        font-style: italic;
     }
     
     .button-container {
         display: flex;
         gap: 12px;
-        margin-top: 5px;
+        margin-top: 10px;
     }
     
     .app-link {
@@ -164,7 +139,7 @@ st.markdown("""
     
     .wechat-tip {
         text-align: center;
-        margin: 25px 0 15px 0;
+        margin: 20px 0;
         padding: 12px;
         background-color: #fff8e1;
         border-radius: 8px;
@@ -172,11 +147,6 @@ st.markdown("""
         color: #333;
         border-left: 4px solid #ffc107;
         line-height: 1.6;
-    }
-    
-    .tip-icon {
-        font-size: 1.1rem;
-        margin-right: 6px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -191,12 +161,14 @@ st.markdown("""
 # 微信环境提示
 st.markdown("""
 <div class="wechat-tip">
-    <span class="tip-icon">📱</span>
-    <strong>微信内访问提示：</strong>如果"打开应用"按钮无法正常跳转，请使用"复制链接"按钮，然后将链接粘贴到手机浏览器中打开。
+    <strong>📱 微信内访问指引：</strong><br>
+    1. 点击下方"打开应用"尝试直接跳转<br>
+    2. 如果无法跳转，<strong>长按下方链接</strong>，选择"复制"<br>
+    3. 在手机浏览器中粘贴访问
 </div>
 """, unsafe_allow_html=True)
 
-# 您的3个应用信息（请替换为您的实际链接）
+# 应用信息
 apps = [
     {
         "name": "资源计算器",
@@ -223,11 +195,9 @@ apps = [
 
 # 显示应用卡片
 for app in apps:
-    # 状态标签
     status_text = "（可使用）" if app["status"] == "online" else "（开发中）"
     status_class = "status-online" if app["status"] == "online" else "status-dev"
     
-    # 创建卡片HTML - 现在有两个按钮
     card_html = f"""
     <div class="app-card">
         <div class="app-title">
@@ -238,19 +208,35 @@ for app in apps:
             {app["description"]}
         </div>
         
+        <!-- 新增：链接显示区域（可长按复制） -->
+        <div class="link-display">
+            {app["url"]}
+        </div>
+        <div class="copy-hint">
+            ↑ 长按上方链接选择"复制" ↑
+        </div>
+        
         <div class="button-container">
             <!-- 原有的打开应用按钮 -->
             <a href="{app["url"]}" target="_blank" class="app-link">
                 打开应用 →
             </a>
             
-            <!-- 新增的复制链接按钮 -->
-            <button class="copy-btn" onclick="copyAppUrl('{app["url"]}', '{app["name"]}')">
+            <!-- 保留的复制按钮（可能在某些浏览器中有效） -->
+            <button class="copy-btn" onclick="navigator.clipboard.writeText('{app["url"]}').then(() => alert('已复制链接')).catch(() => alert('请长按上方链接手动复制'))">
                 复制链接
             </button>
         </div>
     </div>
     """
     
-    # 渲染卡片
     html(card_html)
+
+# 添加页脚提示
+st.markdown("---")
+st.markdown(
+    "<div style='text-align: center; color: #888; font-size: 0.85rem;'>"
+    "💡 提示：微信内访问时，长按链接复制到浏览器中打开最可靠"
+    "</div>",
+    unsafe_allow_html=True
+)
