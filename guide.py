@@ -79,6 +79,17 @@ st.markdown("""
     .status-dev {
         color: #F59E0B;
     }
+    
+    .feedback-note {
+        text-align: center;
+        margin-top: 40px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        color: #666;
+        border-left: 4px solid #667eea;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -142,3 +153,10 @@ for i, app in enumerate(apps):
     
     # 渲染卡片
     html(card_html, height=150)
+
+# 添加管理员反馈提示
+st.markdown("""
+<div class="feedback-note">
+    <strong>💡 提示：</strong> 遇到问题或需要功能改进，请找管理员反馈
+</div>
+""", unsafe_allow_html=True)
