@@ -434,8 +434,8 @@ class AutoUpgradeCalculator:
                 upgrade_weapon = min_foot_weapon
             
             # 尝试升级
-            current_num = weapon_current_nums[upgrade_weapon]
-            target_num = weapon_target_nums[upgrade_weapon] + 1
+            current_num = weapon_target_nums[upgrade_weapon]  # 修正：使用当前目标等级，而不是初始等级
+            target_num = current_num + 1
             
             # 计算升级成本
             cost = self.calculate_upgrade_cost(current_num, target_num, "weapon")
@@ -497,8 +497,8 @@ class AutoUpgradeCalculator:
                 upgrade_jade = min_foot_jade
             
             # 尝试升级
-            current_num = jade_current_nums[upgrade_jade]
-            target_num = jade_target_nums[upgrade_jade] + 1
+            current_num = jade_target_nums[upgrade_jade]  # 修正：使用当前目标等级，而不是初始等级
+            target_num = current_num + 1
             
             # 计算升级成本
             cost = self.calculate_upgrade_cost(current_num, target_num, "jade")
