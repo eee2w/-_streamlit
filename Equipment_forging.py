@@ -11,7 +11,17 @@ st.set_page_config(
 # 应用标题
 st.title("⚔️ 装备锻造消耗计算器")
 st.markdown("---")
-
+st.info(
+    """
+    锻造顺序推荐：  
+    1、步头甲8 弓臂鞋8  
+    2、步臂鞋4 弓头甲4  
+    3、步臂鞋4 弓头甲4  
+    4、步头甲12 弓臂鞋12  
+    5、步臂鞋 8 骑臂鞋8 骑头甲4  
+    6、步头甲16 弓臂鞋16
+    """
+)
 # 初始化session_state
 if 'forge_cost_table' not in st.session_state:
     # 根据新规则动态生成消耗表 - 0-20级，每级消耗[锻造石, 金色装备]
