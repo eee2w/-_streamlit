@@ -3,7 +3,7 @@ import pandas as pd
 
 # ============= Streamlit 网页应用 =============
 #材料自动兑换计算-Material Exchange Auto-Recommendation
-st.set_page_config(page_title="神兵玉石自动升级计算器", layout="wide")
+st.set_page_config(page_title="神兵玉石自动升级计算器_1", layout="wide")
 st.title("⚔️💎 神兵玉石自动升级计算器")
 st.info("""
 1、点击左上角双箭头填写积分和材料数量  
