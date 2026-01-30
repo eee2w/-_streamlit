@@ -8,8 +8,9 @@ st.title("⚔️💎 神兵玉石自动升级计算器")
 st.info("""
 1、点击左上角双箭头填写积分和材料数量  
 2、选择步兵比弓兵神兵玉石高多少级（默认神兵5级玉石2级）  
-3、选择目前步兵弓兵上下神兵玉石等级  
-4、点击计算得到结果  
+3、设置玉石等级是神兵等级百分比（默认40%）  
+4、选择目前步兵弓兵上下神兵玉石等级  
+5、点击计算得到结果  
 """)
 st.markdown("---")
 
@@ -47,15 +48,9 @@ with st.sidebar:
     POINTS_PER_LAPIS = st.number_input("青金石兑换比例", min_value=0.0, value=6.0, step=0.1, format="%.2f")
     POINTS_PER_CARVING_KNIFE = st.number_input("琢玉刀兑换比例", min_value=0.0, value=30.0, step=1.0, format="%.2f")
     POINTS_PER_UNPOLISHED_JADE = st.number_input("璞玉兑换比例", min_value=0.0, value=6.0, step=0.1, format="%.2f")
-
-st.markdown("---")
-
-# --- 等级差设置（从侧边栏移到这里，改为加减号调整）---
-st.subheader("等级差设置")
-st.caption("步兵等级比弓兵高多少级？")
-
-col1, col2 = st.columns(2)
-with col1:
+    
+    st.subheader("等级差设置")
+    st.caption("步兵等级比弓兵高多少级？")
     WEAPON_LEVEL_DIFF = st.number_input(
         "神兵等级差", 
         min_value=0, 
@@ -64,7 +59,6 @@ with col1:
         step=1,
         help="步兵神兵比弓兵神兵高的级数"
     )
-with col2:
     JADE_LEVEL_DIFF = st.number_input(
         "玉石等级差", 
         min_value=0, 
@@ -73,6 +67,17 @@ with col2:
         step=1,
         help="步兵玉石比弓兵玉石高的级数"
     )
+    
+    st.subheader("神兵玉石平衡设置")
+    JADE_PERCENTAGE = st.slider(
+        "玉石等级是神兵等级的百分比", 
+        min_value=10, 
+        max_value=100, 
+        value=40, 
+        step=5,
+        help="玉石等级需要达到神兵等级的百分比（使用最低等级计算）"
+    )
+    st.caption(f"当前设置：玉石等级需要达到神兵最低等级的{JADE_PERCENTAGE}%")
 
 st.markdown("---")
 
@@ -255,6 +260,9 @@ class AutoUpgradeCalculator:
         self.weapon_level_diff = WEAPON_LEVEL_DIFF
         self.jade_level_diff = JADE_LEVEL_DIFF
         
+        # 玉石百分比设置
+        self.jade_percentage = JADE_PERCENTAGE / 100.0  # 转换为小数
+        
         # 版本类型
         self.version_type = version_type
         
@@ -393,7 +401,7 @@ class AutoUpgradeCalculator:
         knife_left = self.current_carving_knife
         jade_left = self.current_unpolished_jade
         
-        # 升级神兵
+        # 首先升级神兵（保持等级差）
         weapon_upgraded = True
         while weapon_upgraded:
             weapon_upgraded = False
@@ -434,8 +442,12 @@ class AutoUpgradeCalculator:
                 upgrade_weapon = min_foot_weapon
             
             # 尝试升级
-            current_num = weapon_target_nums[upgrade_weapon]  # 修正：使用当前目标等级，而不是初始等级
+            current_num = weapon_target_nums[upgrade_weapon]
             target_num = current_num + 1
+            
+            # 检查是否达到最大等级
+            if current_num >= len(self.weapon_upgrade_costs):
+                break
             
             # 计算升级成本
             cost = self.calculate_upgrade_cost(current_num, target_num, "weapon")
@@ -455,7 +467,7 @@ class AutoUpgradeCalculator:
                 weapon_upgraded = True
                 upgraded = True
         
-        # 升级玉石
+        # 然后升级玉石（考虑等级差和百分比限制）
         jade_upgraded = True
         while jade_upgraded:
             jade_upgraded = False
@@ -474,31 +486,69 @@ class AutoUpgradeCalculator:
             # 计算当前等级差
             current_jade_diff = foot_jade_min - archer_jade_min
             
+            # 计算每个兵种的神兵最低等级
+            foot_weapon_min = min([weapon_target_nums[w] for w in ["步兵上", "步兵下"]])
+            archer_weapon_min = min([weapon_target_nums[w] for w in ["弓兵上", "弓兵下"]])
+            
+            # 计算玉石等级限制（基于神兵最低等级的百分比）
+            foot_jade_limit = int(foot_weapon_min * self.jade_percentage)
+            archer_jade_limit = int(archer_weapon_min * self.jade_percentage)
+            
             # 决定升级哪个兵种
             upgrade_jade_target = None
             upgrade_jade = None
             
+            # 检查是否达到百分比限制
+            foot_at_limit = foot_jade_min >= foot_jade_limit
+            archer_at_limit = archer_jade_min >= archer_jade_limit
+            
             if current_jade_diff < self.jade_level_diff:
-                # 等级差没超过设定值，升级步兵玉石
-                # 找出步兵中等级最低的玉石
-                min_foot_jade = foot_jades[foot_jade_levels.index(foot_jade_min)]
-                upgrade_jade_target = "foot"
-                upgrade_jade = min_foot_jade
+                # 等级差没达到，优先升级步兵玉石
+                # 检查是否达到百分比限制
+                if not foot_at_limit:
+                    # 找出步兵中等级最低的玉石
+                    min_foot_jade = foot_jades[foot_jade_levels.index(foot_jade_min)]
+                    upgrade_jade_target = "foot"
+                    upgrade_jade = min_foot_jade
+                elif not archer_at_limit:
+                    # 步兵达到限制，但弓兵没达到，升级弓兵
+                    min_archer_jade = archer_jades[archer_jade_levels.index(archer_jade_min)]
+                    upgrade_jade_target = "archer"
+                    upgrade_jade = min_archer_jade
             elif current_jade_diff > self.jade_level_diff:
-                # 等级差超过设定值，升级弓兵玉石
-                # 找出弓兵中等级最低的玉石
-                min_archer_jade = archer_jades[archer_jade_levels.index(archer_jade_min)]
-                upgrade_jade_target = "archer"
-                upgrade_jade = min_archer_jade
+                # 等级差超过，升级弓兵玉石
+                # 检查是否达到百分比限制
+                if not archer_at_limit:
+                    min_archer_jade = archer_jades[archer_jade_levels.index(archer_jade_min)]
+                    upgrade_jade_target = "archer"
+                    upgrade_jade = min_archer_jade
+                elif not foot_at_limit:
+                    # 弓兵达到限制，但步兵没达到，升级步兵
+                    min_foot_jade = foot_jades[foot_jade_levels.index(foot_jade_min)]
+                    upgrade_jade_target = "foot"
+                    upgrade_jade = min_foot_jade
             else:
-                # 等级差等于设定值，升级步兵玉石
-                min_foot_jade = foot_jades[foot_jade_levels.index(foot_jade_min)]
-                upgrade_jade_target = "foot"
-                upgrade_jade = min_foot_jade
+                # 等级差刚好，优先升级没达到百分比限制的
+                if not foot_at_limit:
+                    min_foot_jade = foot_jades[foot_jade_levels.index(foot_jade_min)]
+                    upgrade_jade_target = "foot"
+                    upgrade_jade = min_foot_jade
+                elif not archer_at_limit:
+                    min_archer_jade = archer_jades[archer_jade_levels.index(archer_jade_min)]
+                    upgrade_jade_target = "archer"
+                    upgrade_jade = min_archer_jade
+            
+            # 如果没有找到可以升级的玉石，则跳出循环
+            if upgrade_jade is None:
+                break
             
             # 尝试升级
-            current_num = jade_target_nums[upgrade_jade]  # 修正：使用当前目标等级，而不是初始等级
+            current_num = jade_target_nums[upgrade_jade]
             target_num = current_num + 1
+            
+            # 检查是否达到最大等级
+            if current_num >= len(self.jade_upgrade_costs):
+                break
             
             # 计算升级成本
             cost = self.calculate_upgrade_cost(current_num, target_num, "jade")
@@ -565,6 +615,15 @@ class AutoUpgradeCalculator:
         # 计算剩余积分
         points_left = self.current_points - points_needed
         
+        # 计算玉石百分比实际值
+        foot_weapon_min = min([weapon_target_nums[w] for w in ["步兵上", "步兵下"]])
+        archer_weapon_min = min([weapon_target_nums[w] for w in ["弓兵上", "弓兵下"]])
+        foot_jade_min = min([jade_target_nums[j] for j in foot_jades])
+        archer_jade_min = min([jade_target_nums[j] for j in archer_jades])
+        
+        foot_actual_percentage = (foot_jade_min / foot_weapon_min * 100) if foot_weapon_min > 0 else 0
+        archer_actual_percentage = (archer_jade_min / archer_weapon_min * 100) if archer_weapon_min > 0 else 0
+        
         result = {
             "upgraded": True,
             "weapon_targets": weapon_target_nums,
@@ -575,7 +634,13 @@ class AutoUpgradeCalculator:
             "materials_to_buy": materials_to_buy,
             "materials_used": materials_used,
             "materials_needed": total_materials_needed,
-            "points_left": points_left
+            "points_left": points_left,
+            "foot_weapon_min": foot_weapon_min,
+            "archer_weapon_min": archer_weapon_min,
+            "foot_jade_min": foot_jade_min,
+            "archer_jade_min": archer_jade_min,
+            "foot_actual_percentage": foot_actual_percentage,
+            "archer_actual_percentage": archer_actual_percentage
         }
         
         return result
@@ -595,6 +660,13 @@ if st.button("开始自动计算最佳升级方案", type="primary", use_contain
         
         # 显示结果总览
         st.subheader("🎯 最佳升级方案")
+        
+        # 显示玉石百分比信息
+        col1, col2 = st.columns(2)
+        with col1:
+            st.info(f"**步兵玉石百分比**: {result.get('foot_actual_percentage', 0):.1f}% (目标: {JADE_PERCENTAGE}%)")
+        with col2:
+            st.info(f"**弓兵玉石百分比**: {result.get('archer_actual_percentage', 0):.1f}% (目标: {JADE_PERCENTAGE}%)")
         
         if version == "详细版 (分别设置上下)":
             # 详细版显示方式
@@ -783,6 +855,25 @@ if st.button("开始自动计算最佳升级方案", type="primary", use_contain
                         "升级级数": upgrade_levels
                     })
             st.dataframe(pd.DataFrame(jade_data), use_container_width=True)
+            
+            # 玉石百分比详情
+            st.write("**玉石百分比详情:**")
+            percentage_data = []
+            percentage_data.append({
+                "兵种": "步兵",
+                "神兵最低等级": result.get('foot_weapon_min', 0),
+                "玉石最低等级": result.get('foot_jade_min', 0),
+                "实际百分比": f"{result.get('foot_actual_percentage', 0):.1f}%",
+                "目标百分比": f"{JADE_PERCENTAGE}%"
+            })
+            percentage_data.append({
+                "兵种": "弓兵",
+                "神兵最低等级": result.get('archer_weapon_min', 0),
+                "玉石最低等级": result.get('archer_jade_min', 0),
+                "实际百分比": f"{result.get('archer_actual_percentage', 0):.1f}%",
+                "目标百分比": f"{JADE_PERCENTAGE}%"
+            })
+            st.dataframe(pd.DataFrame(percentage_data), use_container_width=True)
 
 st.markdown("---")
 st.caption("提示：修改侧边栏的设置后，点击上方按钮重新计算。切换版本后，当前设置会被重置。")
