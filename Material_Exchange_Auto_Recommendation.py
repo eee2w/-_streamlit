@@ -369,24 +369,19 @@ class AutoUpgradeCalculator:
         }
     
     def calculate_normalized_levels(self, min_levels):
-        """计算归一化等级"""
-        # 步兵神兵归一化等级 = 步兵神兵最低等级
-        foot_weapon_norm = min_levels["foot_weapon_min"]
+        """计算归一化等级（修改后的方法）"""
+        # 将神兵等级转换为等效玉石等级
+        # 公式：等效玉石等级 = 神兵等级 × 百分比
+        foot_weapon_norm = min_levels["foot_weapon_min"] * self.jade_percentage
         
-        # 弓兵神兵归一化等级 = 弓兵神兵最低等级 + 神兵等级差
-        archer_weapon_norm = min_levels["archer_weapon_min"] + self.weapon_level_diff
+        # 弓兵神兵加上等级差
+        archer_weapon_norm = (min_levels["archer_weapon_min"] + self.weapon_level_diff) * self.jade_percentage
         
-        # 步兵玉石归一化等级 = 步兵玉石最低等级 / 百分比
-        if self.jade_percentage > 0:
-            foot_jade_norm = min_levels["foot_jade_min"] / self.jade_percentage
-        else:
-            foot_jade_norm = float('inf')  # 避免除以0
-            
-        # 弓兵玉石归一化等级 = (弓兵玉石最低等级 + 玉石等级差) / 百分比
-        if self.jade_percentage > 0:
-            archer_jade_norm = (min_levels["archer_jade_min"] + self.jade_level_diff) / self.jade_percentage
-        else:
-            archer_jade_norm = float('inf')
+        # 玉石等级直接使用（已经是玉石等级）
+        foot_jade_norm = min_levels["foot_jade_min"]
+        
+        # 弓兵玉石加上等级差
+        archer_jade_norm = min_levels["archer_jade_min"] + self.jade_level_diff
         
         return {
             "foot_weapon_norm": foot_weapon_norm,
