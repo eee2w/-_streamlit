@@ -4,7 +4,7 @@ import pandas as pd
 # ============= Streamlit 网页应用 =============
 #材料自动兑换计算-Material Exchange Auto-Recommendation
 st.set_page_config(page_title="神兵玉石自动升级计算器", layout="wide")
-st.title("⚔️💎 神兵玉石自动升级计算器——1")
+st.title("⚔️💎 神兵玉石自动升级计算器")
 st.info("""
 1、点击左上角双箭头填写积分和材料数量  
 2、选择步兵比弓兵神兵玉石高多少级（默认神兵5级玉石2级）  
@@ -31,7 +31,7 @@ with st.sidebar:
     st.header("📝 资源与等级设置")
     
     # 全局积分
-    CURRENT_POINTS = st.number_input("当前积分", min_value=0, value=100000, step=1)  # 改为100000
+    CURRENT_POINTS = st.number_input("当前积分", min_value=0, value=100000, step=1)
     
     st.subheader("神兵材料库存")
     CURRENT_WOOD = st.number_input("木头数量", min_value=0, value=0, step=1)
@@ -394,7 +394,7 @@ class AutoUpgradeCalculator:
         """根据归一化等级找出需要升级的项目"""
         # 找到归一化等级最小的项目
         min_norm = float('inf')
-        upgrade_type = None  # 'foot_weapon', 'archer_weapon', 'foot_jade', 'archer_jade'
+        upgrade_type = None  # 'foot_weapon_norm', 'archer_weapon_norm', 'foot_jade_norm', 'archer_jade_norm'
         
         for norm_type, norm_value in normalized_levels.items():
             if norm_value < min_norm:
@@ -405,7 +405,8 @@ class AutoUpgradeCalculator:
         item_name = None
         is_weapon = False
         
-        if upgrade_type == "foot_weapon":
+        # 注意：upgrade_type 是 "foot_weapon_norm" 这样的字符串
+        if upgrade_type == "foot_weapon_norm":
             # 找到步兵中等级最低的神兵
             foot_weapon_keys = [k for k in weapon_nums.keys() if "步兵" in k]
             min_level = min([weapon_nums[k] for k in foot_weapon_keys])
@@ -415,7 +416,7 @@ class AutoUpgradeCalculator:
                     break
             is_weapon = True
             
-        elif upgrade_type == "archer_weapon":
+        elif upgrade_type == "archer_weapon_norm":
             # 找到弓兵中等级最低的神兵
             archer_weapon_keys = [k for k in weapon_nums.keys() if "弓兵" in k]
             min_level = min([weapon_nums[k] for k in archer_weapon_keys])
@@ -425,7 +426,7 @@ class AutoUpgradeCalculator:
                     break
             is_weapon = True
             
-        elif upgrade_type == "foot_jade":
+        elif upgrade_type == "foot_jade_norm":
             # 找到步兵中等级最低的玉石
             foot_jade_keys = [k for k in jade_nums.keys() if "步兵" in k]
             min_level = min([jade_nums[k] for k in foot_jade_keys])
@@ -435,7 +436,7 @@ class AutoUpgradeCalculator:
                     break
             is_weapon = False
             
-        elif upgrade_type == "archer_jade":
+        elif upgrade_type == "archer_jade_norm":
             # 找到弓兵中等级最低的玉石
             archer_jade_keys = [k for k in jade_nums.keys() if "弓兵" in k]
             min_level = min([jade_nums[k] for k in archer_jade_keys])
@@ -512,7 +513,7 @@ class AutoUpgradeCalculator:
         }
         
         # 开始循环升级
-        max_iterations = 200  # 增加迭代次数，防止无限循环
+        max_iterations = 200  # 增加迭代次数
         iteration = 0
         
         # 调试信息
@@ -786,8 +787,9 @@ if st.button("开始自动计算最佳升级方案", type="primary", use_contain
     if not result["upgraded"]:
         st.warning("当前积分和材料无法进行任何升级！请检查您的资源或降低等级差设置。")
         st.write(f"当前积分: {CURRENT_POINTS}")
-        st.write(f"神兵0→1级所需积分: {1000*POINTS_PER_WOOD + 50*POINTS_PER_MITHRIL}")
-        st.write(f"玉石0→1级所需积分: {2*POINTS_PER_CARVING_KNIFE + 10*POINTS_PER_UNPOLISHED_JADE}")
+        st.write(f"神兵0→1级所需积分: {1000*POINTS_PER_WOOD + 50*POINTS_PER_MITHRIL:.1f}")
+        st.write(f"玉石0→1级所需积分: {2*POINTS_PER_CARVING_KNIFE + 10*POINTS_PER_UNPOLISHED_JADE:.1f}")
+        st.write(f"所有材料库存为0，需要全部用积分兑换")
     else:
         st.success("计算完成！")
         
