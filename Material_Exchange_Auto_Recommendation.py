@@ -75,8 +75,8 @@ with st.sidebar:
     st.subheader("神兵玉石平衡设置")
     JADE_PERCENTAGE = st.number_input(
         "玉石等级是神兵等级的百分比", 
-        min_value=10, 
-        max_value=100, 
+        min_value=30, 
+        max_value=60, 
         value=40, 
         step=1,
         format="%d",
