@@ -201,7 +201,7 @@ apps = [
     },
     {
         "name": "积分兑换神兵玉石材料自动推荐",
-        "url": "https://sanbing-6zn95b84u7tmscgwm2e5bt.streamlit.app/",
+        "url": "https://sanbing-owwxmsziy9dpvq9fp3ijvc.streamlit.app/",
         "description": "智能推荐活动积分如何兑换神兵玉石材料",
         "icon": "📅",
         "status": "dev"
