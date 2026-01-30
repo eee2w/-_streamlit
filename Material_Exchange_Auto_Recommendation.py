@@ -728,9 +728,6 @@ class AutoUpgradeCalculator:
         foot_actual_percentage = (min_levels_final["foot_jade_min"] / min_levels_final["foot_weapon_min"] * 100) if min_levels_final["foot_weapon_min"] > 0 else 0
         archer_actual_percentage = (min_levels_final["archer_jade_min"] / min_levels_final["archer_weapon_min"] * 100) if min_levels_final["archer_weapon_min"] > 0 else 0
         
-        # 计算最终的归一化等级（用于显示）
-        final_normalized_levels = self.calculate_normalized_levels(min_levels_final)
-        
         result = {
             "upgraded": True,
             "weapon_targets": weapon_target_nums,
@@ -749,7 +746,6 @@ class AutoUpgradeCalculator:
             "archer_jade_min": min_levels_final["archer_jade_min"],
             "foot_actual_percentage": foot_actual_percentage,
             "archer_actual_percentage": archer_actual_percentage,
-            "normalized_levels": final_normalized_levels,
             "upgrade_history": upgrade_history
         }
         
@@ -770,22 +766,6 @@ if st.button("开始自动计算最佳升级方案", type="primary", use_contain
         
         # 显示结果总览
         st.subheader("🎯 最佳升级方案")
-        
-        # 显示归一化等级信息
-        col1, col2 = st.columns(2)
-        with col1:
-            st.info(f"**步兵神兵归一化等级**: {result.get('normalized_levels', {}).get('foot_weapon_norm', 0):.2f}")
-            st.info(f"**弓兵神兵归一化等级**: {result.get('normalized_levels', {}).get('archer_weapon_norm', 0):.2f}")
-        with col2:
-            st.info(f"**步兵玉石归一化等级**: {result.get('normalized_levels', {}).get('foot_jade_norm', 0):.2f}")
-            st.info(f"**弓兵玉石归一化等级**: {result.get('normalized_levels', {}).get('archer_jade_norm', 0):.2f}")
-        
-        # 显示玉石百分比信息
-        col1, col2 = st.columns(2)
-        with col1:
-            st.info(f"**步兵玉石百分比**: {result.get('foot_actual_percentage', 0):.1f}% (目标: {JADE_PERCENTAGE}%)")
-        with col2:
-            st.info(f"**弓兵玉石百分比**: {result.get('archer_actual_percentage', 0):.1f}% (目标: {JADE_PERCENTAGE}%)")
         
         if version == "详细版 (分别设置上下)":
             # 详细版显示方式
@@ -988,25 +968,6 @@ if st.button("开始自动计算最佳升级方案", type="primary", use_contain
                         "升级级数": upgrade_levels
                     })
             st.dataframe(pd.DataFrame(jade_data), use_container_width=True)
-            
-            # 玉石百分比详情
-            st.write("**玉石百分比详情:**")
-            percentage_data = []
-            percentage_data.append({
-                "兵种": "步兵",
-                "神兵最低等级": result.get('foot_weapon_min', 0),
-                "玉石最低等级": result.get('foot_jade_min', 0),
-                "实际百分比": f"{result.get('foot_actual_percentage', 0):.1f}%",
-                "目标百分比": f"{JADE_PERCENTAGE}%"
-            })
-            percentage_data.append({
-                "兵种": "弓兵",
-                "神兵最低等级": result.get('archer_weapon_min', 0),
-                "玉石最低等级": result.get('archer_jade_min', 0),
-                "实际百分比": f"{result.get('archer_actual_percentage', 0):.1f}%",
-                "目标百分比": f"{JADE_PERCENTAGE}%"
-            })
-            st.dataframe(pd.DataFrame(percentage_data), use_container_width=True)
             
             # 升级顺序详情（可选）
             if 'upgrade_history' in result and result['upgrade_history']:
